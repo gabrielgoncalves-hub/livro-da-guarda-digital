@@ -9,273 +9,265 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.data.jpa.repository.JpaRepository;
 import jakarta.persistence.*;
+import jakarta.servlet.http.HttpServletRequest;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Map;
+import java.util.HashMap;
 
 @SpringBootApplication
 public class SistemaGuardaApplication {
     public static void main(String[] args) {
         SpringApplication.run(SistemaGuardaApplication.class, args);
-        System.out.println("\n === SISTEMA DO TG 02-009 - MÓDULO RONDAS ATIVADO === \n");
+        System.out.println("\n === SISTEMA TG 02-009: CYBER SECURITY & ANALYTICS ATIVADOS === \n");
     }
 }
 
-// --- 1. ENTIDADES ---
+// --- 1. ENTIDADES DE NEGÓCIO ---
 enum StatusApresentacao { PRESENTE, ATRASADO, FALTA }
 
-@Entity
-class Sentinela {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private int numero;
-    private String nomeGuerra;
-    private String funcao = "Sentinela (18h às 06h)"; 
-    @Enumerated(EnumType.STRING)
-    private StatusApresentacao status;
-    private String atividadeAtual = "Prontidão"; 
-
-    public Sentinela() {}
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public int getNumero() { return numero; }
-    public void setNumero(int numero) { this.numero = numero; }
-    public String getNomeGuerra() { return nomeGuerra; }
-    public void setNomeGuerra(String nomeGuerra) { this.nomeGuerra = nomeGuerra; }
-    public String getFuncao() { return funcao; }
-    public void setFuncao(String funcao) { this.funcao = funcao; }
-    public StatusApresentacao getStatus() { return status; }
-    public void setStatus(StatusApresentacao status) { this.status = status; }
-    public String getAtividadeAtual() { return atividadeAtual; }
-    public void setAtividadeAtual(String atividadeAtual) { this.atividadeAtual = atividadeAtual; }
+@Entity class Sentinela {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+    private int numero; private String nomeGuerra; private String funcao = "Sentinela (18h às 06h)"; 
+    @Enumerated(EnumType.STRING) private StatusApresentacao status; private String atividadeAtual = "Prontidão"; 
+    public Sentinela() {} public Long getId() { return id; } public void setId(Long id) { this.id = id; }
+    public int getNumero() { return numero; } public void setNumero(int numero) { this.numero = numero; }
+    public String getNomeGuerra() { return nomeGuerra; } public void setNomeGuerra(String nomeGuerra) { this.nomeGuerra = nomeGuerra; }
+    public String getFuncao() { return funcao; } public void setFuncao(String funcao) { this.funcao = funcao; }
+    public StatusApresentacao getStatus() { return status; } public void setStatus(StatusApresentacao status) { this.status = status; }
+    public String getAtividadeAtual() { return atividadeAtual; } public void setAtividadeAtual(String atividadeAtual) { this.atividadeAtual = atividadeAtual; }
 }
 
-@Entity
-class Alteracao {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String horario;
-    private String descricao;
-
-    public Alteracao() {}
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getHorario() { return horario; }
-    public void setHorario(String horario) { this.horario = horario; }
-    public String getDescricao() { return descricao; }
-    public void setDescricao(String descricao) { this.descricao = descricao; }
+@Entity class Alteracao {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+    private String horario; private String descricao;
+    public Alteracao() {} public Long getId() { return id; } public void setId(Long id) { this.id = id; }
+    public String getHorario() { return horario; } public void setHorario(String horario) { this.horario = horario; }
+    public String getDescricao() { return descricao; } public void setDescricao(String descricao) { this.descricao = descricao; }
 }
 
-@Entity
-class Visitante {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String nome;
-    private String rg;
-    private String placaVeiculo;
-    private String motivo;
-    private String horaEntrada;
-    private String horaSaida = "--:--"; 
-
-    public Visitante() {}
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
-    public String getRg() { return rg; }
-    public void setRg(String rg) { this.rg = rg; }
-    public String getPlacaVeiculo() { return placaVeiculo; }
-    public void setPlacaVeiculo(String placaVeiculo) { this.placaVeiculo = placaVeiculo; }
-    public String getMotivo() { return motivo; }
-    public void setMotivo(String motivo) { this.motivo = motivo; }
-    public String getHoraEntrada() { return horaEntrada; }
-    public void setHoraEntrada(String horaEntrada) { this.horaEntrada = horaEntrada; }
-    public String getHoraSaida() { return horaSaida; }
-    public void setHoraSaida(String horaSaida) { this.horaSaida = horaSaida; }
+@Entity class Visitante {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+    private String nome; private String rg; private String placaVeiculo; private String motivo; private String horaEntrada; private String horaSaida = "--:--"; 
+    public Visitante() {} public Long getId() { return id; } public void setId(Long id) { this.id = id; }
+    public String getNome() { return nome; } public void setNome(String nome) { this.nome = nome; }
+    public String getRg() { return rg; } public void setRg(String rg) { this.rg = rg; }
+    public String getPlacaVeiculo() { return placaVeiculo; } public void setPlacaVeiculo(String placaVeiculo) { this.placaVeiculo = placaVeiculo; }
+    public String getMotivo() { return motivo; } public void setMotivo(String motivo) { this.motivo = motivo; }
+    public String getHoraEntrada() { return horaEntrada; } public void setHoraEntrada(String horaEntrada) { this.horaEntrada = horaEntrada; }
+    public String getHoraSaida() { return horaSaida; } public void setHoraSaida(String horaSaida) { this.horaSaida = horaSaida; }
 }
 
-@Entity
-class Ronda {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String horarioPrevisto;
-    private String horarioRealizado = "--:--";
-    private String responsavel = "--";
-    private boolean concluida = false;
-
-    public Ronda() {}
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getHorarioPrevisto() { return horarioPrevisto; }
-    public void setHorarioPrevisto(String horarioPrevisto) { this.horarioPrevisto = horarioPrevisto; }
-    public String getHorarioRealizado() { return horarioRealizado; }
-    public void setHorarioRealizado(String horarioRealizado) { this.horarioRealizado = horarioRealizado; }
-    public String getResponsavel() { return responsavel; }
-    public void setResponsavel(String responsavel) { this.responsavel = responsavel; }
-    public boolean isConcluida() { return concluida; }
-    public void setConcluida(boolean concluida) { this.concluida = concluida; }
+@Entity class Ronda {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+    private String horarioPrevisto; private String horarioRealizado = "--:--"; private String responsavel = "--"; private boolean concluida = false;
+    public Ronda() {} public Long getId() { return id; } public void setId(Long id) { this.id = id; }
+    public String getHorarioPrevisto() { return horarioPrevisto; } public void setHorarioPrevisto(String horarioPrevisto) { this.horarioPrevisto = horarioPrevisto; }
+    public String getHorarioRealizado() { return horarioRealizado; } public void setHorarioRealizado(String horarioRealizado) { this.horarioRealizado = horarioRealizado; }
+    public String getResponsavel() { return responsavel; } public void setResponsavel(String responsavel) { this.responsavel = responsavel; }
+    public boolean isConcluida() { return concluida; } public void setConcluida(boolean concluida) { this.concluida = concluida; }
 }
 
-@Entity
-class RegistroHistorico {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String dataServico;
-    private String cmtGuarda;
-    @Column(length = 5000000) 
-    private String dadosJson; 
-
-    public RegistroHistorico() {}
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getDataServico() { return dataServico; }
-    public void setDataServico(String dataServico) { this.dataServico = dataServico; }
-    public String getCmtGuarda() { return cmtGuarda; }
-    public void setCmtGuarda(String cmtGuarda) { this.cmtGuarda = cmtGuarda; }
-    public String getDadosJson() { return dadosJson; }
-    public void setDadosJson(String dadosJson) { this.dadosJson = dadosJson; }
+@Entity class RegistroHistorico {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+    private String dataServico; private String cmtGuarda; @Column(length = 5000000) private String dadosJson; 
+    public RegistroHistorico() {} public Long getId() { return id; } public void setId(Long id) { this.id = id; }
+    public String getDataServico() { return dataServico; } public void setDataServico(String dataServico) { this.dataServico = dataServico; }
+    public String getCmtGuarda() { return cmtGuarda; } public void setCmtGuarda(String cmtGuarda) { this.cmtGuarda = cmtGuarda; }
+    public String getDadosJson() { return dadosJson; } public void setDadosJson(String dadosJson) { this.dadosJson = dadosJson; }
 }
 
+// --- 2. ENTIDADES DE SEGURANÇA E AUDITORIA (NOVO) ---
+@Entity class Usuario {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+    @Column(unique = true) private String username; 
+    private String password; 
+    private String role;
+    public Usuario() {}
+    public String getUsername() { return username; } public void setUsername(String username) { this.username = username; }
+    public String getPassword() { return password; } public void setPassword(String password) { this.password = password; }
+    public String getRole() { return role; } public void setRole(String role) { this.role = role; }
+}
+
+@Entity class LogAuditoria {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+    private String dataHora; private String ipOrigem; private String usuarioAcao; private String descricaoAcao;
+    public LogAuditoria() {}
+    public void setDataHora(String dataHora) { this.dataHora = dataHora; }
+    public void setIpOrigem(String ipOrigem) { this.ipOrigem = ipOrigem; }
+    public void setUsuarioAcao(String usuarioAcao) { this.usuarioAcao = usuarioAcao; }
+    public void setDescricaoAcao(String descricaoAcao) { this.descricaoAcao = descricaoAcao; }
+}
+
+// --- 3. DTOs ---
 class RelatorioFinal {
-    private List<Sentinela> sentinelas;
-    private List<Alteracao> alteracoes;
-    private List<Visitante> visitantes;
-    private List<Ronda> rondas;
-
-    public RelatorioFinal(List<Sentinela> s, List<Alteracao> a, List<Visitante> v, List<Ronda> r) {
-        this.sentinelas = s; this.alteracoes = a; this.visitantes = v; this.rondas = r;
-    }
-    public List<Sentinela> getSentinelas() { return sentinelas; }
-    public List<Alteracao> getAlteracoes() { return alteracoes; }
-    public List<Visitante> getVisitantes() { return visitantes; }
-    public List<Ronda> getRondas() { return rondas; }
+    private List<Sentinela> sentinelas; private List<Alteracao> alteracoes; private List<Visitante> visitantes; private List<Ronda> rondas;
+    public RelatorioFinal(List<Sentinela> s, List<Alteracao> a, List<Visitante> v, List<Ronda> r) { this.sentinelas = s; this.alteracoes = a; this.visitantes = v; this.rondas = r; }
+    public List<Sentinela> getSentinelas() { return sentinelas; } public List<Alteracao> getAlteracoes() { return alteracoes; }
+    public List<Visitante> getVisitantes() { return visitantes; } public List<Ronda> getRondas() { return rondas; }
 }
 
-// --- 2. REPOSITÓRIOS ---
+class EstatisticasDTO {
+    public int totalServicos = 0; public int totalVisitantes = 0; public int totalRondasPendentes = 0;
+    public Map<String, Integer> statusTropa = new HashMap<>();
+}
+
+// --- 4. REPOSITÓRIOS ---
 interface SentinelaRepository extends JpaRepository<Sentinela, Long> {}
 interface AlteracaoRepository extends JpaRepository<Alteracao, Long> {}
 interface VisitanteRepository extends JpaRepository<Visitante, Long> {}
 interface RondaRepository extends JpaRepository<Ronda, Long> {}
 interface RegistroHistoricoRepository extends JpaRepository<RegistroHistorico, Long> {}
+interface UsuarioRepository extends JpaRepository<Usuario, Long> { Optional<Usuario> findByUsername(String username); }
+interface LogAuditoriaRepository extends JpaRepository<LogAuditoria, Long> {}
 
-// --- 3. SERVIÇO ---
-@Service
-class GuardaService {
-    private final SentinelaRepository sentinelaRepo;
-    private final AlteracaoRepository alteracaoRepo;
-    private final VisitanteRepository visitanteRepo;
-    private final RondaRepository rondaRepo;
-    private final RegistroHistoricoRepository historicoRepo;
+// --- 5. INITIALIZER (POPULA BANCO COM SENHAS BCRYPT) ---
+@Component class DataInitializer implements org.springframework.boot.CommandLineRunner {
+    private final UsuarioRepository usuarioRepo; private final PasswordEncoder encoder;
+    public DataInitializer(UsuarioRepository u, PasswordEncoder e) { this.usuarioRepo = u; this.encoder = e; }
+    @Override public void run(String... args) {
+        if(usuarioRepo.count() == 0) {
+            Usuario m = new Usuario(); m.setUsername("monitor"); m.setPassword(encoder.encode("tg02009")); m.setRole("ROLE_MONITOR"); usuarioRepo.save(m);
+            Usuario s = new Usuario(); s.setUsername("subtenente"); s.setPassword(encoder.encode("sub02009")); s.setRole("ROLE_SUBTENENTE"); usuarioRepo.save(s);
+            System.out.println("[CYBER] Banco populado com usuários seguros (BCrypt).");
+        }
+    }
+}
 
-    public GuardaService(SentinelaRepository s, AlteracaoRepository a, VisitanteRepository v, RondaRepository r, RegistroHistoricoRepository h) {
-        this.sentinelaRepo = s; this.alteracaoRepo = a; this.visitanteRepo = v; this.rondaRepo = r; this.historicoRepo = h;
+// --- 6. SERVIÇO ---
+@Service class GuardaService {
+    private final SentinelaRepository sentinelaRepo; private final AlteracaoRepository alteracaoRepo; private final VisitanteRepository visitanteRepo;
+    private final RondaRepository rondaRepo; private final RegistroHistoricoRepository historicoRepo; private final LogAuditoriaRepository logRepo;
+
+    public GuardaService(SentinelaRepository s, AlteracaoRepository a, VisitanteRepository v, RondaRepository r, RegistroHistoricoRepository h, LogAuditoriaRepository l) {
+        this.sentinelaRepo = s; this.alteracaoRepo = a; this.visitanteRepo = v; this.rondaRepo = r; this.historicoRepo = h; this.logRepo = l;
     }
 
     public void registrarSentinela(Sentinela s) { sentinelaRepo.save(s); }
     public void removerSentinela(Long id) { sentinelaRepo.deleteById(id); }
     public void registrarAlteracao(Alteracao a) { alteracaoRepo.save(a); }
     public void removerAlteracao(Long id) { alteracaoRepo.deleteById(id); }
-    public void atualizarAtividade(Long id, String n) {
-        Sentinela s = sentinelaRepo.findById(id).orElse(null);
-        if (s != null) { s.setAtividadeAtual(n); sentinelaRepo.save(s); }
-    }
-
+    public void atualizarAtividade(Long id, String n) { Sentinela s = sentinelaRepo.findById(id).orElse(null); if(s != null) { s.setAtividadeAtual(n); sentinelaRepo.save(s); } }
     public void registrarVisitante(Visitante v) { visitanteRepo.save(v); }
-    public void registrarSaidaVisitante(Long id, String hora) {
-        Visitante v = visitanteRepo.findById(id).orElse(null);
-        if (v != null) { v.setHoraSaida(hora); visitanteRepo.save(v); }
-    }
+    public void registrarSaidaVisitante(Long id, String h) { Visitante v = visitanteRepo.findById(id).orElse(null); if(v != null) { v.setHoraSaida(h); visitanteRepo.save(v); } }
     public void removerVisitante(Long id) { visitanteRepo.deleteById(id); }
-
     public void registrarRonda(Ronda r) { rondaRepo.save(r); }
-    public void realizarRonda(Long id, String responsavel, String horaRealizada) {
-        Ronda r = rondaRepo.findById(id).orElse(null);
-        if (r != null) {
-            r.setResponsavel(responsavel);
-            r.setHorarioRealizado(horaRealizada);
-            r.setConcluida(true);
-            rondaRepo.save(r);
-        }
-    }
+    public void realizarRonda(Long id, String resp, String hora) { Ronda r = rondaRepo.findById(id).orElse(null); if(r != null) { r.setResponsavel(resp); r.setHorarioRealizado(hora); r.setConcluida(true); rondaRepo.save(r); } }
     public void removerRonda(Long id) { rondaRepo.deleteById(id); }
 
-    public RelatorioFinal gerarParteDaGuarda() {
-        return new RelatorioFinal(sentinelaRepo.findAll(), alteracaoRepo.findAll(), visitanteRepo.findAll(), rondaRepo.findAll());
-    }
-
-    public void iniciarNovaGuarda() {
-        sentinelaRepo.deleteAll();
-        alteracaoRepo.deleteAll();
-        visitanteRepo.deleteAll();
-        rondaRepo.deleteAll();
-    }
-
+    public RelatorioFinal gerarParteDaGuarda() { return new RelatorioFinal(sentinelaRepo.findAll(), alteracaoRepo.findAll(), visitanteRepo.findAll(), rondaRepo.findAll()); }
+    public void iniciarNovaGuarda() { sentinelaRepo.deleteAll(); alteracaoRepo.deleteAll(); visitanteRepo.deleteAll(); rondaRepo.deleteAll(); }
     public void salvarHistorico(RegistroHistorico h) { historicoRepo.save(h); }
     public List<RegistroHistorico> listarHistoricos() { return historicoRepo.findAll(); }
-    public void removerHistorico(Long id) { historicoRepo.deleteById(id); }
+
+    // MÓDULO DE AUDITORIA: Registra IP na hora da exclusão
+    public void removerHistoricoAuditado(Long id, String ip, String user) {
+        LogAuditoria log = new LogAuditoria();
+        log.setDataHora(new java.util.Date().toString()); log.setIpOrigem(ip); log.setUsuarioAcao(user); log.setDescricaoAcao("Exclusão Permanente do Registro ID: " + id);
+        logRepo.save(log);
+        historicoRepo.deleteById(id);
+    }
+
+    // MÓDULO DE ANALYTICS: Processa JSON em memória
+    public EstatisticasDTO compilarEstatisticas() {
+        EstatisticasDTO dto = new EstatisticasDTO();
+        List<RegistroHistorico> hist = historicoRepo.findAll();
+        dto.totalServicos = hist.size();
+        ObjectMapper mapper = new ObjectMapper();
+        
+        for(RegistroHistorico h : hist) {
+            try {
+                JsonNode root = mapper.readTree(h.getDadosJson());
+                JsonNode vis = root.get("visitantes");
+                if(vis != null && vis.isArray()) dto.totalVisitantes += vis.size();
+                
+                JsonNode ron = root.get("rondas");
+                if(ron != null && ron.isArray()) {
+                    for(JsonNode r : ron) { if(r.has("concluida") && !r.get("concluida").asBoolean()) dto.totalRondasPendentes++; }
+                }
+                
+                JsonNode sen = root.get("sentinelas");
+                if(sen != null && sen.isArray()) {
+                    for(JsonNode s : sen) {
+                        String st = s.has("status") ? s.get("status").asText() : "PRESENTE";
+                        dto.statusTropa.put(st, dto.statusTropa.getOrDefault(st, 0) + 1);
+                    }
+                }
+            } catch(Exception e) {}
+        }
+        return dto;
+    }
 }
 
-// --- 4. CONTROLLER ---
-@RestController
-@RequestMapping("/api/livro-guarda")
+// --- 7. CONTROLLER ---
+@RestController @RequestMapping("/api/livro-guarda")
 class LivroGuardaController {
-    private final GuardaService guardaService;
-    public LivroGuardaController(GuardaService g) { this.guardaService = g; }
+    private final GuardaService svc; public LivroGuardaController(GuardaService g) { this.svc = g; }
 
-    @PostMapping("/sentinela") public String addS(@RequestBody Sentinela s) { guardaService.registrarSentinela(s); return "OK"; }
-    @DeleteMapping("/sentinela/{id}") public String delS(@PathVariable Long id) { guardaService.removerSentinela(id); return "OK"; }
-    @PutMapping("/sentinela/{id}/atividade") public String updA(@PathVariable Long id, @RequestBody String a) { guardaService.atualizarAtividade(id, a); return "OK"; }
-    
-    @PostMapping("/alteracao") public String addAlt(@RequestBody Alteracao a) { guardaService.registrarAlteracao(a); return "OK"; }
-    @DeleteMapping("/alteracao/{id}") public String delAlt(@PathVariable Long id) { guardaService.removerAlteracao(id); return "OK"; }
-    
-    @PostMapping("/visitante") public String addV(@RequestBody Visitante v) { guardaService.registrarVisitante(v); return "OK"; }
-    @PutMapping("/visitante/{id}/saida") public String outV(@PathVariable Long id, @RequestBody String h) { guardaService.registrarSaidaVisitante(id, h); return "OK"; }
-    @DeleteMapping("/visitante/{id}") public String delV(@PathVariable Long id) { guardaService.removerVisitante(id); return "OK"; }
+    @PostMapping("/sentinela") public String addS(@RequestBody Sentinela s) { svc.registrarSentinela(s); return "OK"; }
+    @DeleteMapping("/sentinela/{id}") public String delS(@PathVariable Long id) { svc.removerSentinela(id); return "OK"; }
+    @PutMapping("/sentinela/{id}/atividade") public String updA(@PathVariable Long id, @RequestBody String a) { svc.atualizarAtividade(id, a); return "OK"; }
+    @PostMapping("/alteracao") public String addAlt(@RequestBody Alteracao a) { svc.registrarAlteracao(a); return "OK"; }
+    @DeleteMapping("/alteracao/{id}") public String delAlt(@PathVariable Long id) { svc.removerAlteracao(id); return "OK"; }
+    @PostMapping("/visitante") public String addV(@RequestBody Visitante v) { svc.registrarVisitante(v); return "OK"; }
+    @PutMapping("/visitante/{id}/saida") public String outV(@PathVariable Long id, @RequestBody String h) { svc.registrarSaidaVisitante(id, h); return "OK"; }
+    @DeleteMapping("/visitante/{id}") public String delV(@PathVariable Long id) { svc.removerVisitante(id); return "OK"; }
+    @PostMapping("/ronda") public String addR(@RequestBody Ronda r) { svc.registrarRonda(r); return "OK"; }
+    @PutMapping("/ronda/{id}/realizar") public String realR(@PathVariable Long id, @RequestBody Ronda r) { svc.realizarRonda(id, r.getResponsavel(), r.getHorarioRealizado()); return "OK"; }
+    @DeleteMapping("/ronda/{id}") public String delR(@PathVariable Long id) { svc.removerRonda(id); return "OK"; }
 
-    @PostMapping("/ronda") public String addR(@RequestBody Ronda r) { guardaService.registrarRonda(r); return "OK"; }
-    @PutMapping("/ronda/{id}/realizar") public String realR(@PathVariable Long id, @RequestBody Ronda r) { guardaService.realizarRonda(id, r.getResponsavel(), r.getHorarioRealizado()); return "OK"; }
-    @DeleteMapping("/ronda/{id}") public String delR(@PathVariable Long id) { guardaService.removerRonda(id); return "OK"; }
-
-    @GetMapping("/relatorio") public RelatorioFinal emitir() { return guardaService.gerarParteDaGuarda(); }
-    @DeleteMapping("/nova-guarda") public String nova() { guardaService.iniciarNovaGuarda(); return "OK"; }
-    @PostMapping("/historico") public String saveH(@RequestBody RegistroHistorico h) { guardaService.salvarHistorico(h); return "OK"; }
-    @GetMapping("/historico") public List<RegistroHistorico> listH() { return guardaService.listarHistoricos(); }
-    @DeleteMapping("/historico/{id}") public String delH(@PathVariable Long id) { guardaService.removerHistorico(id); return "OK"; }
+    @GetMapping("/relatorio") public RelatorioFinal emitir() { return svc.gerarParteDaGuarda(); }
+    @DeleteMapping("/nova-guarda") public String nova() { svc.iniciarNovaGuarda(); return "OK"; }
+    @PostMapping("/historico") public String saveH(@RequestBody RegistroHistorico h) { svc.salvarHistorico(h); return "OK"; }
+    @GetMapping("/historico") public List<RegistroHistorico> listH() { return svc.listarHistoricos(); }
     
+    // ENDPOINT AUDITADO
+    @DeleteMapping("/historico/{id}") public String delH(@PathVariable Long id, HttpServletRequest req, org.springframework.security.core.Authentication auth) { 
+        svc.removerHistoricoAuditado(id, req.getRemoteAddr(), auth.getName()); return "OK"; 
+    }
+
+    // ENDPOINT ANALYTICS
+    @GetMapping("/estatisticas") public EstatisticasDTO getEst() { return svc.compilarEstatisticas(); }
+
     @GetMapping("/me") public String getU(org.springframework.security.core.Authentication auth) {
         return auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_SUBTENENTE")) ? "PAINEL DO SUBTENENTE" : "PAINEL DO MONITOR";
     }
 }
 
-// --- 5. CONFIGURAÇÃO DE SEGURANÇA ---
-@Configuration
-@EnableWebSecurity
+// --- 8. CONFIGURAÇÃO DE SEGURANÇA (BCRYPT + DB) ---
+@Configuration @EnableWebSecurity
 class SecurityConfig {
-    @org.springframework.beans.factory.annotation.Value("${SENHA_SISTEMA:tg02009}") private String sM;
-    @org.springframework.beans.factory.annotation.Value("${SENHA_SUB:sub02009}") private String sS;
+    @Bean public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
+    @Bean public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.csrf(c -> c.disable())
+            .authorizeHttpRequests(a -> a
                 .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/livro-guarda/historico/**").hasRole("SUBTENENTE")
+                .requestMatchers("/api/livro-guarda/estatisticas").hasRole("SUBTENENTE")
                 .anyRequest().authenticated()
             )
             .formLogin(f -> f.permitAll())
             .logout(l -> l.logoutUrl("/api/logout").invalidateHttpSession(true).deleteCookies("JSESSIONID").logoutSuccessUrl("/login?logout"));
         return http.build();
     }
+}
 
-    @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails m = User.withDefaultPasswordEncoder().username("monitor").password(sM).roles("MONITOR").build();
-        UserDetails s = User.withDefaultPasswordEncoder().username("subtenente").password(sS).roles("SUBTENENTE").build();
-        return new InMemoryUserDetailsManager(m, s);
+@Service class CustomUserDetailsService implements UserDetailsService {
+    private final UsuarioRepository repo; public CustomUserDetailsService(UsuarioRepository r) { this.repo = r; }
+    @Override public UserDetails loadUserByUsername(String username) {
+        Usuario u = repo.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado no DB"));
+        return User.withUsername(u.getUsername()).password(u.getPassword()).authorities(u.getRole()).build();
     }
 }

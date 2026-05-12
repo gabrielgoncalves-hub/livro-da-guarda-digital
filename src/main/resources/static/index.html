@@ -37,18 +37,42 @@
         </div>
     </header>
 
-    <!-- QUADRO DE AVISOS DO COMANDO -->
+    <!-- DASHBOARD ANALÍTICO (INVISÍVEL PARA MONITORES) -->
+    <section id="painel-dashboard" class="mb-8 bg-indigo-900 p-6 rounded-xl border border-indigo-700 shadow-lg hidden">
+        <h3 class="text-white font-bold mb-6 uppercase text-sm border-b border-indigo-700 pb-3 flex items-center gap-2">
+            <span class="w-2 h-2 bg-indigo-400 rounded-full animate-pulse"></span>
+            Inteligência e Estatísticas (Comando)
+        </h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-indigo-800 p-4 rounded-lg border border-indigo-600 shadow-inner">
+                <p class="text-[10px] text-indigo-300 font-bold uppercase mb-1">Total de Serviços</p>
+                <p class="text-3xl font-black text-white" id="stat-servicos">0</p>
+            </div>
+            <div class="bg-indigo-800 p-4 rounded-lg border border-indigo-600 shadow-inner">
+                <p class="text-[10px] text-indigo-300 font-bold uppercase mb-1">Pessoas na Portaria</p>
+                <p class="text-3xl font-black text-white" id="stat-visitantes">0</p>
+            </div>
+            <div class="bg-indigo-800 p-4 rounded-lg border border-indigo-600 shadow-inner">
+                <p class="text-[10px] text-indigo-300 font-bold uppercase mb-1">Faltas/Atrasos (Tropa)</p>
+                <p class="text-3xl font-black text-amber-400" id="stat-faltas">0</p>
+            </div>
+            <div class="bg-indigo-800 p-4 rounded-lg border border-indigo-600 shadow-inner">
+                <p class="text-[10px] text-indigo-300 font-bold uppercase mb-1">Rondas Falhas</p>
+                <p class="text-3xl font-black text-rose-400" id="stat-rondas">0</p>
+            </div>
+        </div>
+    </section>
+
     <div class="aviso-interno mb-6 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg shadow-sm">
         <h4 class="text-yellow-800 font-bold text-sm uppercase mb-1">🚨 Ordens do S Ten Alexandre</h4>
         <ul class="text-xs text-yellow-700 space-y-1 list-disc ml-4">
             <li><strong>Trava de Liberação:</strong> A Permanência (08h-18h) SÓ VAI EMBORA se estiver completa a Guarnição de serviço da noite.</li>
-            <li><strong>Alimentação:</strong> A tropa (18h-06h) já deve chegar jantada ou levar o lanche. A cozinha possui fogão, microondas e geladeira.</li>
+            <li><strong>Alimentação:</strong> A tropa (18h-06h) já deve chegar jantada ou levar o lanche.</li>
         </ul>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <!-- 1. APRESENTAÇÃO DA TROPA -->
         <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
             <h3 class="text-[#1b3d1a] font-bold flex items-center gap-2 mb-6 uppercase text-sm border-b pb-3">1. Apresentação da Tropa</h3>
             <form id="form-sentinela" class="space-y-4">
@@ -68,7 +92,6 @@
             <ul id="lista-sentinelas-viva" class="mt-6 space-y-3 max-h-48 overflow-y-auto"></ul>
         </section>
 
-        <!-- 2. LIVRO DE ALTERAÇÕES -->
         <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
             <h3 class="text-[#1b3d1a] font-bold mb-6 uppercase text-sm border-b pb-3">2. Livro de Alterações</h3>
             <form id="form-alteracao" class="space-y-4">
@@ -79,7 +102,6 @@
             <ul id="lista-alteracoes-viva" class="mt-6 space-y-3 max-h-48 overflow-y-auto"></ul>
         </section>
 
-        <!-- 3. CONTROLE DE PORTARIA -->
         <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
             <h3 class="text-[#1b3d1a] font-bold mb-6 uppercase text-sm border-b pb-3 text-blue-600">3. Controle de Portaria</h3>
             <form id="form-visitante" class="space-y-4">
@@ -94,7 +116,6 @@
             <ul id="lista-visitantes-viva" class="mt-6 space-y-3 max-h-48 overflow-y-auto"></ul>
         </section>
 
-        <!-- 4. CONTROLE DE RONDAS -->
         <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
             <h3 class="text-[#1b3d1a] font-bold mb-6 uppercase text-sm border-b pb-3 text-orange-600">4. Checklist de Rondas</h3>
             <form id="form-ronda" class="space-y-4">
@@ -106,13 +127,11 @@
             <ul id="lista-rondas-viva" class="mt-6 space-y-3 max-h-48 overflow-y-auto"></ul>
         </section>
 
-        <!-- 5. QUADRO DE TRABALHO -->
         <section class="bg-slate-50/50 p-6 rounded-xl border border-slate-200 shadow-sm lg:col-span-2">
             <h3 class="text-[#1b3d1a] font-bold mb-6 uppercase text-sm border-b pb-3">5. Quadro de Trabalho Atual</h3>
             <div id="lista-trabalho-viva" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </section>
 
-        <!-- 6. PASSAGEM DE CARGA -->
         <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm lg:col-span-3">
             <h3 class="text-[#1b3d1a] font-bold mb-6 uppercase text-sm border-b pb-3">6. Passagem de Carga e Fechamento</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-xl mb-6">
@@ -139,18 +158,11 @@
             </div>
         </section>
 
-        <!-- 7. HISTÓRICO -->
         <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm lg:col-span-3">
             <h3 class="text-[#1b3d1a] font-bold mb-6 uppercase text-sm border-b pb-3">7. Arquivo / Histórico de Serviços</h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-left bg-white">
-                    <thead class="bg-slate-50">
-                        <tr class="text-[11px] uppercase border-b">
-                            <th class="p-4">Data</th>
-                            <th class="p-4">Comandante da Guarda</th>
-                            <th class="p-4 text-right">Ações (Restritas)</th>
-                        </tr>
-                    </thead>
+                    <thead class="bg-slate-50"><tr class="text-[11px] uppercase border-b"><th class="p-4">Data</th><th class="p-4">Comandante da Guarda</th><th class="p-4 text-right">Ações (Restritas)</th></tr></thead>
                     <tbody id="corpo-historico" class="divide-y"></tbody>
                 </table>
             </div>
@@ -169,7 +181,7 @@
                 <div class="mb-8 text-sm"><h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">2. Efetivo da Guarda</h4>
                     <table class="w-full border border-black text-[10px]"><thead class="bg-slate-100"><tr class="border-b"><th class="p-2 border-r w-8">Nº</th><th class="p-2 border-r">Nome de Guerra</th><th class="p-2 border-r">Função/Turno</th><th class="p-2 border-r w-16">Status</th><th class="p-2">Posto / Atividade</th></tr></thead><tbody id="corpo-efetivo"></tbody></table>
                 </div>
-                <div class="mb-8 text-sm"><h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">3. Controle de Portaria (Visitantes e Veículos)</h4>
+                <div class="mb-8 text-sm"><h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">3. Controle de Portaria</h4>
                     <table class="w-full border border-black text-[10px]"><thead class="bg-slate-100"><tr class="border-b"><th class="p-2 border-r">Nome do Visitante</th><th class="p-2 border-r w-24">RG</th><th class="p-2 border-r w-20">Placa</th><th class="p-2 border-r">Motivo</th><th class="p-2 w-16">E/S</th></tr></thead><tbody id="corpo-visitantes-pdf"></tbody></table>
                 </div>
                 <div class="mb-8 text-sm"><h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">4. Checklist de Rondas</h4>
@@ -190,13 +202,12 @@
     <script>
         const API_URL = '/api/livro-guarda';
         let historicoCompleto = [];
-        let isSubtenente = false; // VARIÁVEL DE CONTROLE DE PERMISSÃO
+        let isSubtenente = false;
 
         function updateClock() { document.getElementById('clock').innerText = new Date().toLocaleTimeString('pt-BR'); }
         setInterval(updateClock, 1000);
 
         async function fazerLogout() { if(confirm("Sair?")) { await fetch('/api/logout', { method: 'POST' }); window.location.reload(); } }
-
         function setarHoraAtual() { document.getElementById('hora-alteracao').value = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}); }
         function setarDataAtual() { const h = new Date(); document.getElementById('data-servico').value = `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}-${String(h.getDate()).padStart(2, '0')}`; }
 
@@ -208,14 +219,26 @@
                     document.getElementById('label-painel').innerText = p;
                     if(p.includes("SUBTENENTE")) {
                         document.getElementById('label-painel').classList.replace('text-slate-400', 'text-purple-600');
-                        isSubtenente = true; // ATIVA OS PRIVILÉGIOS NO FRONTEND
-                    } else {
-                        isSubtenente = false;
-                    }
+                        isSubtenente = true;
+                        document.getElementById('painel-dashboard').classList.remove('hidden');
+                        carregarEstatisticas(); // CARREGA OS DADOS DO DASHBOARD
+                    } else { isSubtenente = false; }
                 }
-            } catch (erro) {
-                document.getElementById('label-painel').innerText = "PAINEL OFF-LINE";
-            }
+            } catch (erro) { document.getElementById('label-painel').innerText = "OFF-LINE"; }
+        }
+
+        async function carregarEstatisticas() {
+            try {
+                const resp = await fetch(`${API_URL}/estatisticas`);
+                if(resp.ok) {
+                    const data = await resp.json();
+                    document.getElementById('stat-servicos').innerText = data.totalServicos;
+                    document.getElementById('stat-visitantes').innerText = data.totalVisitantes;
+                    document.getElementById('stat-rondas').innerText = data.totalRondasPendentes;
+                    let atrasosFaltas = (data.statusTropa['FALTA'] || 0) + (data.statusTropa['ATRASADO'] || 0);
+                    document.getElementById('stat-faltas').innerText = atrasosFaltas;
+                }
+            } catch(e) {}
         }
 
         async function atualizarListasVivas() {
@@ -223,12 +246,9 @@
                 const resp = await fetch(`${API_URL}/relatorio`);
                 const data = await resp.json();
                 
-                const lS = document.getElementById('lista-sentinelas-viva');
-                const lT = document.getElementById('lista-trabalho-viva');
-                const lA = document.getElementById('lista-alteracoes-viva');
-                const lV = document.getElementById('lista-visitantes-viva');
+                const lS = document.getElementById('lista-sentinelas-viva'); const lT = document.getElementById('lista-trabalho-viva');
+                const lA = document.getElementById('lista-alteracoes-viva'); const lV = document.getElementById('lista-visitantes-viva');
                 const lR = document.getElementById('lista-rondas-viva');
-                
                 lS.innerHTML = ''; lT.innerHTML = ''; lA.innerHTML = ''; lV.innerHTML = ''; lR.innerHTML = '';
 
                 data.sentinelas.forEach(s => {
@@ -237,70 +257,31 @@
                         lT.innerHTML += `<div class="bg-white p-4 rounded-xl border border-slate-200"><p class="text-[9px] text-slate-400 font-bold mb-1">POSTO ATUAL</p><div class="flex justify-between items-center"><span class="font-bold text-sm">At ${s.numero} ${s.nomeGuerra}</span><select class="bg-slate-50 border p-1 rounded text-[10px] font-bold" onchange="alterarAtividade(${s.id}, this.value)"><option value="Prontidão" ${s.atividadeAtual==='Prontidão'?'selected':''}>Prontidão</option><option value="Posto 1 (Portão)" ${s.atividadeAtual==='Posto 1 (Portão)'?'selected':''}>Posto 1 (Portão)</option><option value="Posto 2 (Fundos)" ${s.atividadeAtual==='Posto 2 (Fundos)'?'selected':''}>Posto 2 (Fundos)</option><option value="Ronda" ${s.atividadeAtual==='Ronda'?'selected':''}>Ronda</option><option value="Permanência" ${s.atividadeAtual==='Permanência'?'selected':''}>Permanência</option></select></div></div>`;
                     }
                 });
-
                 data.alteracoes.forEach(a => { lA.innerHTML += `<li class="bg-amber-50 border p-3 flex justify-between rounded-lg shadow-sm border-l-4 border-l-amber-500 text-[11px]"><div class="flex flex-col"><span class="font-bold text-amber-700">[${a.horario}]</span><span>${a.descricao}</span></div><button onclick="removerAlteracao(${a.id})" class="text-red-500 font-bold ml-4">X</button></li>`; });
-
                 data.visitantes.forEach(v => {
                     const statusSaida = v.horaSaida === '--:--' ? `<button onclick="registrarSaidaVisitante(${v.id})" class="bg-red-50 text-red-600 px-2 py-0.5 rounded border border-red-200 text-[9px] font-bold">REGISTRAR SAÍDA</button>` : `<span class="text-[10px] font-bold text-green-600">SAÍDA: ${v.horaSaida}</span>`;
                     lV.innerHTML += `<li class="bg-white border p-3 flex justify-between items-center rounded-lg shadow-sm border-l-4 border-l-blue-600"><div class="flex flex-col"><span class="text-sm font-bold text-blue-800">${v.nome} <span class="text-[10px] font-normal text-slate-400">(${v.rg})</span></span><span class="text-[10px] text-slate-500">${v.motivo} ${v.placaVeiculo?'| Placa: '+v.placaVeiculo:''}</span><span class="text-[10px] font-bold">ENTRADA: ${v.horaEntrada}</span></div><div class="flex flex-col items-end gap-1">${statusSaida}<button onclick="removerVisitante(${v.id})" class="text-slate-300 hover:text-red-500 text-[9px]">EXCLUIR</button></div></li>`;
                 });
-
                 data.rondas.forEach(r => {
                     const btnAcao = r.concluida ? `<span class="text-[10px] font-bold text-emerald-600">FEITA ÀS ${r.horarioRealizado}</span>` : `<button onclick="realizarRonda(${r.id})" class="bg-orange-100 text-orange-700 px-3 py-1 rounded border border-orange-300 text-[10px] font-bold">EXECUTAR AGORA</button>`;
                     lR.innerHTML += `<li class="bg-white border p-3 flex justify-between items-center rounded-lg shadow-sm border-l-4 border-l-orange-500"><div class="flex flex-col"><span class="text-sm font-bold text-orange-800">Ronda das ${r.horarioPrevisto}</span><span class="text-[10px] text-slate-500">Resp: ${r.responsavel}</span></div><div class="flex flex-col items-end gap-1">${btnAcao}<button onclick="removerRonda(${r.id})" class="text-slate-300 hover:text-red-500 text-[9px]">EXCLUIR</button></div></li>`;
                 });
-
             } catch(e){}
         }
 
         async function carregarHistoricos() {
             const resp = await fetch(`${API_URL}/historico`);
             historicoCompleto = await resp.json();
-            const c = document.getElementById('corpo-historico'); 
-            c.innerHTML = '';
-            
-            if(!historicoCompleto.length) { 
-                c.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-slate-400">NENHUM SERVIÇO ARQUIVADO.</td></tr>'; 
-                return; 
-            }
-            
+            const c = document.getElementById('corpo-historico'); c.innerHTML = '';
+            if(!historicoCompleto.length) { c.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-slate-400">VAZIO</td></tr>'; return; }
             historicoCompleto.forEach((h, i) => { 
-                // A LÓGICA DE CONDITIONAL RENDERING ESTÁ AQUI
-                let acoesHTML = '';
-                
-                if (isSubtenente) {
-                    acoesHTML = `
-                        <button onclick="visualizarHistorico(${i})" class="px-4 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold">ABRIR PDF</button>
-                        <button onclick="excluirHistorico(${h.id})" class="px-4 py-1.5 bg-red-50 text-red-600 rounded-lg text-[10px] font-bold">DELETAR</button>
-                    `;
-                } else {
-                    acoesHTML = `<span class="text-[10px] text-slate-400 font-bold bg-slate-100 px-3 py-1 rounded">🔒 RESTRITO</span>`;
-                }
-
-                c.innerHTML += `
-                    <tr class="hover:bg-slate-50">
-                        <td class="p-4 text-sm font-bold">${h.dataServico}</td>
-                        <td class="p-4 text-sm uppercase">${h.cmtGuarda}</td>
-                        <td class="p-4 text-right flex justify-end gap-2">${acoesHTML}</td>
-                    </tr>
-                `; 
+                let acoesHTML = isSubtenente ? `<button onclick="visualizarHistorico(${i})" class="px-4 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold">ABRIR PDF</button><button onclick="excluirHistorico(${h.id})" class="px-4 py-1.5 bg-red-50 text-red-600 rounded-lg text-[10px] font-bold">DELETAR</button>` : `<span class="text-[10px] text-slate-400 font-bold bg-slate-100 px-3 py-1 rounded">🔒 RESTRITO</span>`;
+                c.innerHTML += `<tr class="hover:bg-slate-50"><td class="p-4 text-sm font-bold">${h.dataServico}</td><td class="p-4 text-sm uppercase">${h.cmtGuarda}</td><td class="p-4 text-right flex justify-end gap-2">${acoesHTML}</td></tr>`; 
             });
         }
 
-        async function registrarSaidaVisitante(id) {
-            const h = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-            await fetch(`${API_URL}/visitante/${id}/saida`, { method: 'PUT', headers: {'Content-Type': 'text/plain'}, body: h });
-            atualizarListasVivas();
-        }
-
-        async function realizarRonda(id) {
-            const respNome = prompt("Nome de quem realizou a ronda (Ex: At Dias):");
-            if(!respNome) return;
-            const h = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-            await fetch(`${API_URL}/ronda/${id}/realizar`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({responsavel: respNome, horarioRealizado: h}) });
-            atualizarListasVivas();
-        }
-
+        async function registrarSaidaVisitante(id) { const h = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}); await fetch(`${API_URL}/visitante/${id}/saida`, { method: 'PUT', headers: {'Content-Type': 'text/plain'}, body: h }); atualizarListasVivas(); }
+        async function realizarRonda(id) { const respNome = prompt("Nome de quem realizou a ronda:"); if(!respNome) return; const h = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}); await fetch(`${API_URL}/ronda/${id}/realizar`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({responsavel: respNome, horarioRealizado: h}) }); atualizarListasVivas(); }
         async function excluirHistorico(id) { if(confirm("ORDEM CRÍTICA: Apagar permanentemente?")) { const r = await fetch(`${API_URL}/historico/${id}`, { method: 'DELETE' }); if(r.ok) carregarHistoricos(); else alert("SEM PERMISSÃO"); } }
         async function alterarAtividade(id, a) { await fetch(`${API_URL}/sentinela/${id}/atividade`, { method: 'PUT', headers: {'Content-Type': 'text/plain'}, body: a }); }
         async function removerSentinela(id) { await fetch(`${API_URL}/sentinela/${id}`, { method: 'DELETE' }); atualizarListasVivas(); }
@@ -308,108 +289,48 @@
         async function removerVisitante(id) { await fetch(`${API_URL}/visitante/${id}`, { method: 'DELETE' }); atualizarListasVivas(); }
         async function removerRonda(id) { await fetch(`${API_URL}/ronda/${id}`, { method: 'DELETE' }); atualizarListasVivas(); }
 
-        document.getElementById('form-sentinela').onsubmit = async (e) => {
-            e.preventDefault();
-            const s = { numero: document.getElementById('num-at').value, nomeGuerra: document.getElementById('nome-at').value, funcao: document.getElementById('funcao-at').value, status: document.getElementById('status-at').value };
-            await fetch(`${API_URL}/sentinela`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(s) });
-            e.target.reset(); atualizarListasVivas();
-        };
-
-        document.getElementById('form-alteracao').onsubmit = async (e) => {
-            e.preventDefault();
-            const a = { horario: document.getElementById('hora-alteracao').value, descricao: document.getElementById('desc-alteracao').value };
-            await fetch(`${API_URL}/alteracao`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(a) });
-            e.target.reset(); setarHoraAtual(); atualizarListasVivas();
-        };
-
-        document.getElementById('form-visitante').onsubmit = async (e) => {
-            e.preventDefault();
-            const h = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-            const v = { nome: document.getElementById('nome-vis').value, rg: document.getElementById('rg-vis').value, placaVeiculo: document.getElementById('placa-vis').value, motivo: document.getElementById('motivo-vis').value, horaEntrada: h };
-            await fetch(`${API_URL}/visitante`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(v) });
-            e.target.reset(); atualizarListasVivas();
-        };
-
-        document.getElementById('form-ronda').onsubmit = async (e) => {
-            e.preventDefault();
-            const r = { horarioPrevisto: document.getElementById('hora-prevista-ronda').value };
-            await fetch(`${API_URL}/ronda`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(r) });
-            e.target.reset(); atualizarListasVivas();
-        };
+        document.getElementById('form-sentinela').onsubmit = async (e) => { e.preventDefault(); const s = { numero: document.getElementById('num-at').value, nomeGuerra: document.getElementById('nome-at').value, funcao: document.getElementById('funcao-at').value, status: document.getElementById('status-at').value }; await fetch(`${API_URL}/sentinela`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(s) }); e.target.reset(); atualizarListasVivas(); };
+        document.getElementById('form-alteracao').onsubmit = async (e) => { e.preventDefault(); const a = { horario: document.getElementById('hora-alteracao').value, descricao: document.getElementById('desc-alteracao').value }; await fetch(`${API_URL}/alteracao`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(a) }); e.target.reset(); setarHoraAtual(); atualizarListasVivas(); };
+        document.getElementById('form-visitante').onsubmit = async (e) => { e.preventDefault(); const h = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}); const v = { nome: document.getElementById('nome-vis').value, rg: document.getElementById('rg-vis').value, placaVeiculo: document.getElementById('placa-vis').value, motivo: document.getElementById('motivo-vis').value, horaEntrada: h }; await fetch(`${API_URL}/visitante`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(v) }); e.target.reset(); atualizarListasVivas(); };
+        document.getElementById('form-ronda').onsubmit = async (e) => { e.preventDefault(); const r = { horarioPrevisto: document.getElementById('hora-prevista-ronda').value }; await fetch(`${API_URL}/ronda`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(r) }); e.target.reset(); atualizarListasVivas(); };
 
         function desenharRelatorio(t, d, cmt, f, a, ch, o, sentinelas, alteracoes, visitantes = [], rondas = []) {
-            document.getElementById('data-relatorio').innerText = d;
-            document.getElementById('relatorio-cmt').innerText = cmt;
-            document.getElementById('assinatura-cmt').innerText = cmt.toUpperCase();
-            document.getElementById('pdf-faxina').innerText = f;
-            document.getElementById('pdf-armamento').innerText = a;
-            document.getElementById('pdf-chaves').innerText = ch;
-            document.getElementById('pdf-obs').innerText = o || "S/A";
-
+            document.getElementById('data-relatorio').innerText = d; document.getElementById('relatorio-cmt').innerText = cmt; document.getElementById('assinatura-cmt').innerText = cmt.toUpperCase();
+            document.getElementById('pdf-faxina').innerText = f; document.getElementById('pdf-armamento').innerText = a; document.getElementById('pdf-chaves').innerText = ch; document.getElementById('pdf-obs').innerText = o || "S/A";
             const cE = document.getElementById('corpo-efetivo'); cE.innerHTML = '';
-            sentinelas.sort((a,b)=>a.funcao.includes('Permanência')?-1:1).forEach(s => {
-                cE.innerHTML += `<tr class="border-b"><td class="p-1 border-r text-center">${s.numero}</td><td class="p-1 border-r">${s.nomeGuerra}</td><td class="p-1 border-r">${s.funcao}</td><td class="p-1 border-r text-center font-bold">${s.status}</td><td class="p-1">${s.atividadeAtual}</td></tr>`;
-            });
-
+            sentinelas.sort((a,b)=>a.funcao.includes('Permanência')?-1:1).forEach(s => { cE.innerHTML += `<tr class="border-b"><td class="p-1 border-r text-center">${s.numero}</td><td class="p-1 border-r">${s.nomeGuerra}</td><td class="p-1 border-r">${s.funcao}</td><td class="p-1 border-r text-center font-bold">${s.status}</td><td class="p-1">${s.atividadeAtual}</td></tr>`; });
             const cV = document.getElementById('corpo-visitantes-pdf'); cV.innerHTML = '';
             if(!visitantes.length) cV.innerHTML = '<tr><td colspan="5" class="p-2 text-center italic">Nenhum visitante registrado.</td></tr>';
             else visitantes.forEach(v => { cV.innerHTML += `<tr class="border-b"><td class="p-1 border-r">${v.nome}</td><td class="p-1 border-r text-center">${v.rg}</td><td class="p-1 border-r text-center">${v.placaVeiculo||'--'}</td><td class="p-1 border-r">${v.motivo}</td><td class="p-1 text-center font-bold">${v.horaEntrada}/${v.horaSaida}</td></tr>`; });
-
             const cR = document.getElementById('corpo-rondas-pdf'); cR.innerHTML = '';
             if(!rondas.length) cR.innerHTML = '<tr><td colspan="4" class="p-2 text-center italic">Nenhuma ronda registrada.</td></tr>';
             else rondas.forEach(r => { cR.innerHTML += `<tr class="border-b"><td class="p-1 border-r text-center font-bold">${r.horarioPrevisto}</td><td class="p-1 border-r text-center font-bold">${r.horarioRealizado}</td><td class="p-1 border-r">${r.responsavel}</td><td class="p-1 text-center ${r.concluida?'text-green-600 font-bold':'text-red-600 font-bold'}">${r.concluida?'REALIZADA':'PENDENTE'}</td></tr>`; });
-
             const cA = document.getElementById('corpo-alteracoes'); cA.innerHTML = '';
             if(!alteracoes.length) cA.innerHTML = '<tr><td colspan="2" class="p-2 text-center italic">S/A</td></tr>';
             else alteracoes.forEach(alt => { cA.innerHTML += `<tr class="border-b"><td class="p-1 border-r font-bold">${alt.horario}</td><td class="p-1">${alt.descricao}</td></tr>`; });
-
             document.getElementById('painel-relatorio').classList.remove('hidden');
         }
 
         async function gerarRelatorioAtual() {
-            const resp = await fetch(`${API_URL}/relatorio`);
-            const d = await resp.json();
-            const dF = document.getElementById('data-servico').value.split('-').reverse().join('/');
+            const resp = await fetch(`${API_URL}/relatorio`); const d = await resp.json(); const dF = document.getElementById('data-servico').value.split('-').reverse().join('/');
             desenharRelatorio("PARTE DA GUARDA", dF, document.getElementById('cmt-guarda').value || "NÃO INFORMADO", document.getElementById('carga-faxina').value, document.getElementById('carga-armamento').value, document.getElementById('carga-chaves').value, document.getElementById('carga-obs').value, d.sentinelas, d.alteracoes, d.visitantes, d.rondas);
         }
 
-        function visualizarHistorico(idx) {
-            const h = historicoCompleto[idx]; const d = JSON.parse(h.dadosJson);
-            desenharRelatorio("ARQUIVO", h.dataServico, h.cmtGuarda, d.cargaFaxina||"S/A", d.cargaArmamento, d.cargaChaves, d.cargaObs, d.sentinelas, d.alteracoes, d.visitantes||[], d.rondas||[]);
-        }
+        function visualizarHistorico(idx) { const h = historicoCompleto[idx]; const d = JSON.parse(h.dadosJson); desenharRelatorio("ARQUIVO", h.dataServico, h.cmtGuarda, d.cargaFaxina||"S/A", d.cargaArmamento, d.cargaChaves, d.cargaObs, d.sentinelas, d.alteracoes, d.visitantes||[], d.rondas||[]); }
 
         async function encerrarESalvarGuarda() {
             if(!document.getElementById('cmt-guarda').value) return alert("Preencha o Cmt!");
             if(confirm("Encerrar serviço?")) {
-                const r = await fetch(`${API_URL}/relatorio`);
-                const d = await r.json();
-                const p = {
-                    dataServico: document.getElementById('data-servico').value.split('-').reverse().join('/'),
-                    cmtGuarda: document.getElementById('cmt-guarda').value,
-                    dadosJson: JSON.stringify({ cargaFaxina: document.getElementById('carga-faxina').value, cargaArmamento: document.getElementById('carga-armamento').value, cargaChaves: document.getElementById('carga-chaves').value, cargaObs: document.getElementById('carga-obs').value, sentinelas: d.sentinelas, alteracoes: d.alteracoes, visitantes: d.visitantes, rondas: d.rondas })
-                };
+                const r = await fetch(`${API_URL}/relatorio`); const d = await r.json();
+                const p = { dataServico: document.getElementById('data-servico').value.split('-').reverse().join('/'), cmtGuarda: document.getElementById('cmt-guarda').value, dadosJson: JSON.stringify({ cargaFaxina: document.getElementById('carga-faxina').value, cargaArmamento: document.getElementById('carga-armamento').value, cargaChaves: document.getElementById('carga-chaves').value, cargaObs: document.getElementById('carga-obs').value, sentinelas: d.sentinelas, alteracoes: d.alteracoes, visitantes: d.visitantes, rondas: d.rondas }) };
                 await fetch(`${API_URL}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(p) });
-                await fetch(`${API_URL}/nova-guarda`, { method: 'DELETE' });
-                location.reload(); 
+                await fetch(`${API_URL}/nova-guarda`, { method: 'DELETE' }); location.reload(); 
             }
         }
 
         function exportarPDF() { window.print(); }
         function fecharRelatorio() { document.getElementById('painel-relatorio').classList.add('hidden'); }
-        
-        // NOVO FLUXO DE CARREGAMENTO PARA GARANTIR A LEITURA DA PERMISSÃO PRIMEIRO
-        window.onload = async () => { 
-            updateClock(); 
-            setarHoraAtual(); 
-            setarDataAtual(); 
-            atualizarListasVivas(); 
-            
-            // 1. Descobre se é monitor ou subtenente
-            await carregarCargoUsuario(); 
-            
-            // 2. Renderiza o histórico com os botões certos ou com a tag 🔒 RESTRITO
-            carregarHistoricos(); 
-        };
+        window.onload = async () => { updateClock(); setarHoraAtual(); setarDataAtual(); atualizarListasVivas(); await carregarCargoUsuario(); carregarHistoricos(); };
     </script>
 </body>
 </html>
