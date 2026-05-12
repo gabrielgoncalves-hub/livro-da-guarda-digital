@@ -359,12 +359,16 @@
                 }
 
                 historicoCompleto.forEach((hist, index) => {
+                    // Aqui substituímos o "..." pelo HTML completo da linha da tabela
                     corpoHist.innerHTML += `
                         <tr class="hover:bg-white/5 transition-colors group">
                             <td class="p-4 text-sm font-bold text-[#4ade80]">${hist.dataServico}</td>
                             <td class="p-4 text-sm opacity-80 uppercase">${hist.cmtGuarda}</td>
-                            <td class="p-4 text-right">
+                            <td class="p-4 text-right flex justify-end gap-2">
                                 <button class="px-3 py-1 bg-blue-600/20 text-blue-400 border border-blue-600/50 rounded-full text-[10px] font-bold uppercase hover:bg-blue-600 hover:text-white transition-all" onclick="visualizarHistorico(${index})">Abrir PDF</button>
+                                
+                                <!-- Botão de Excluir -->
+                                <button class="px-3 py-1 bg-red-600/10 text-red-500 border border-red-600/30 rounded-full text-[10px] font-bold uppercase hover:bg-red-600 hover:text-white transition-all" onclick="excluirHistorico(${hist.id})">Apagar</button>
                             </td>
                         </tr>
                     `;
@@ -372,19 +376,26 @@
             } catch (erro) { 
                 corpoHist.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500 bg-red-900/20 border border-red-500 rounded text-xs">Erro ao conectar com o banco de dados PostgreSQL.</td></tr>';
             }
+        }
 
-            // Dentro do carregarHistoricos
-            historicoCompleto.forEach((hist, index) => {
-                // Verifique se você está usando hist.id (ID do banco) e não o index do array
-                corpoHist.innerHTML += `
-                    <tr>
-                        ...
-                        <td>
-                            <button onclick="excluirHistorico(${hist.id})">Apagar</button>
-                        </td>
-                    </tr>
-                `;
-            });
+        // Função de Excluir que você acabou de validar
+        async function excluirHistorico(id) {
+            if (confirm("ORDEM CRÍTICA: Deseja apagar permanentemente este registro? (Restrito a Subtenentes)")) {
+                try {
+                    const resposta = await fetch(`${API_URL}/historico/${id}`, { method: 'DELETE' });
+                    
+                    if (resposta.ok) {
+                        alert("Histórico removido com sucesso.");
+                        carregarHistoricos(); // Atualiza a tabela na hora
+                    } else if (resposta.status === 403) {
+                        alert("ACESSO NEGADO: Apenas Subtenentes (ROLE_SUBTENENTE) podem realizar esta operação.");
+                    } else {
+                        alert("Erro inesperado ao tentar apagar o arquivo.");
+                    }
+                } catch (erro) {
+                    alert("Erro de comunicação com o servidor.");
+                }
+            }
         }
 
         async function alterarAtividade(id, novaAtividade) {
@@ -493,33 +504,36 @@
         function exportarPDF() {
             const elementoParaImprimir = document.getElementById('conteudo-para-pdf');
             
-            // 1. Salva o estilo original
+            // 1. Backup do estilo original
             const estiloOriginal = elementoParaImprimir.style.cssText;
             
-            // 2. Força o visual perfeito para folha A4 (Fundo branco, texto preto, largura fixa)
+            // 2. Prepara o elemento para impressão (cores limpas, sem forçar width manual)
             elementoParaImprimir.style.backgroundColor = '#ffffff';
             elementoParaImprimir.style.color = '#000000';
-            elementoParaImprimir.style.width = '800px'; 
-            elementoParaImprimir.style.maxWidth = '800px'; 
-            elementoParaImprimir.style.padding = '30px';
+            elementoParaImprimir.style.padding = '20px';
             
-            // Pega a data para o nome do arquivo (Mimo de UX)
+            // Nome do arquivo com a data
             let dataServico = document.getElementById('data-relatorio').innerText.replace(/\//g, '-');
             let nomeArquivo = `Parte_da_Guarda_TG02009_${dataServico}.pdf`;
 
+            // 3. O Segredo da Renderização Perfeita
             const opcoes = { 
-                margin: [15, 10, 15, 10], // Margens [Cima, Direita, Baixo, Esquerda]
+                margin: 10, // Margem uniforme de 10mm
                 filename: nomeArquivo, 
                 image: { type: 'jpeg', quality: 1.0 }, 
                 html2canvas: { 
                     scale: 2, 
-                    backgroundColor: '#ffffff', // Trava o fundo branco no canvas
-                    useCORS: true 
+                    backgroundColor: '#ffffff', 
+                    useCORS: true,
+                    scrollY: 0, // RESOLVE O BUG 1: Ignora o scroll da tela e cola o topo no limite
+                    windowWidth: 850 // RESOLVE O BUG 2: Dá espaço para o "NÃO INFORMADO" não cortar
                 }, 
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                // RESOLVE O BUG 3: Força a folha a pular de página em vez de cortar as tabelas ao meio
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } 
             };
 
-            // Gera o PDF e depois devolve o layout ao normal
+            // Gera o PDF e restaura a interface tática do monitor
             html2pdf().set(opcoes).from(elementoParaImprimir).save().then(() => {
                 elementoParaImprimir.style.cssText = estiloOriginal;
             });
