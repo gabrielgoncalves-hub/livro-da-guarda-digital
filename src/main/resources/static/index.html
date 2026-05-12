@@ -4,263 +4,179 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Livro da Guarda Digital - TG 02-009</title>
-    
-    <!-- Tailwind CSS & Fonts (SEM BIBLIOTECA DE PDF DE TERCEIROS) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #334155; }
-        
-        /* Scrollbar suave e limpa */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        /* --- CSS MÁGICO PARA O PDF NATIVO --- */
         @media print {
-            /* Esconde toda a interface do sistema (painéis, inputs, botões) */
             body * { visibility: hidden; }
-            
-            /* Restaura a visibilidade APENAS do conteúdo do relatório */
             #conteudo-para-pdf, #conteudo-para-pdf * { visibility: visible; }
-            
-            /* Tira o modal do modo 'fixo' para permitir múltiplas páginas e joga pro topo */
-            #painel-relatorio {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: auto;
-                overflow: visible !important;
-                background: white !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                border: none !important;
-                box-shadow: none !important;
-            }
-
-            #conteudo-para-pdf { 
-                position: relative;
-                left: 0; 
-                top: 0; 
-                width: 100%; 
-            }
-
-            /* Esconde os botões de "Fechar Janela" e "Baixar PDF" na folha impressa */
-            .botoes-impressao { display: none !important; }
-
-            /* Evita que as linhas da tabela sejam cortadas ao meio na quebra de página */
+            #painel-relatorio { position: absolute; left: 0; top: 0; width: 100%; height: auto; background: white; padding: 0; border: none; }
+            .botoes-impressao, .aviso-interno { display: none !important; }
             tr { break-inside: avoid; }
-            
-            /* Margem oficial de documento */
             @page { margin: 15mm; }
         }
     </style>
 </head>
 <body class="p-4 lg:p-8 min-h-screen">
 
-    <!-- HEADER CLEAN -->
     <header class="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-xl border border-slate-200 mb-8 shadow-sm border-t-4 border-t-[#2d5a27]">
-        <div class="mb-4 md:mb-0">
+        <div>
             <h1 class="text-2xl font-black tracking-tight text-[#1b3d1a] uppercase">Livro da Guarda Digital</h1>
             <p class="text-xs font-semibold text-slate-500 uppercase tracking-widest mt-1">TG 02-009 • Bragança Paulista/SP</p>
         </div>
         <div class="flex items-center gap-6">
             <div class="text-right hidden md:block">
                 <p id="clock" class="text-lg font-mono font-bold text-[#2d5a27]"></p>
-                <p id="label-painel" class="text-[10px] text-slate-400 font-bold uppercase transition-colors">Carregando...</p>
+                <p id="label-painel" class="text-[10px] text-slate-400 font-bold uppercase">Carregando...</p>
             </div>
-            <button onclick="fazerLogout()" class="px-5 py-2.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-600 hover:text-white transition-all rounded-lg text-xs font-bold uppercase shadow-sm">
-                Sair do Sistema
-            </button>
+            <button onclick="fazerLogout()" class="px-5 py-2.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-600 hover:text-white transition-all rounded-lg text-xs font-bold uppercase shadow-sm">Sair</button>
         </div>
     </header>
+
+    <!-- QUADRO DE AVISOS DO COMANDO -->
+    <div class="aviso-interno mb-6 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg shadow-sm">
+        <h4 class="text-yellow-800 font-bold text-sm uppercase mb-1">🚨 Ordens do S Ten Alexandre</h4>
+        <ul class="text-xs text-yellow-700 space-y-1 list-disc ml-4">
+            <li><strong>Trava de Liberação:</strong> A Permanência (08h-18h) SÓ VAI EMBORA se estiver completa a Guarnição de serviço da noite.</li>
+            <li><strong>Alimentação:</strong> A tropa (18h-06h) já deve chegar jantada ou levar o lanche. A cozinha possui fogão, microondas e geladeira.</li>
+        </ul>
+    </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <!-- 1. APRESENTAÇÃO DA TROPA -->
-        <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <h3 class="text-[#1b3d1a] font-bold flex items-center gap-2 mb-6 uppercase text-sm border-b border-slate-100 pb-3">
-                <span class="w-2 h-2 bg-[#2d5a27] rounded-full animate-pulse"></span>
-                1. Apresentação da Tropa
-            </h3>
+        <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h3 class="text-[#1b3d1a] font-bold flex items-center gap-2 mb-6 uppercase text-sm border-b pb-3">1. Apresentação da Tropa</h3>
             <form id="form-sentinela" class="space-y-4">
-                <div>
-                    <label class="block text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1">Número do Atirador</label>
-                    <input type="number" id="num-at" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-slate-800 outline-none transition-all focus:ring-2 focus:ring-[#2d5a27]/30 focus:border-[#2d5a27] placeholder:text-slate-400" placeholder="Ex: 10">
+                <div class="flex gap-4">
+                    <input type="number" id="num-at" required class="w-1/3 bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm" placeholder="Nº">
+                    <input type="text" id="nome-at" required class="w-2/3 bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm" placeholder="Nome de Guerra">
                 </div>
-                <div>
-                    <label class="block text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1">Nome de Guerra</label>
-                    <input type="text" id="nome-at" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-slate-800 outline-none transition-all focus:ring-2 focus:ring-[#2d5a27]/30 focus:border-[#2d5a27] placeholder:text-slate-400" placeholder="Ex: Silva">
-                </div>
-                <div>
-                    <label class="block text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1">Status</label>
-                    <select id="status-at" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-slate-800 outline-none transition-all focus:ring-2 focus:ring-[#2d5a27]/30 focus:border-[#2d5a27] cursor-pointer">
-                        <option value="PRESENTE">Presente</option>
-                        <option value="ATRASADO">Atrasado</option>
-                        <option value="FALTA">Falta</option>
-                    </select>
-                </div>
-                <button type="submit" class="w-full bg-[#2d5a27] hover:bg-[#1b3d1a] text-white font-bold py-3.5 rounded-lg transition-all uppercase text-xs shadow-md shadow-[#2d5a27]/20 mt-2">
-                    Registrar Atirador
-                </button>
+                <select id="funcao-at" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm font-bold text-[#2d5a27]">
+                    <option value="Sentinela (18h às 06h)">Sentinela (18h às 06h)</option>
+                    <option value="Permanência (08h às 18h)">Permanência (08h às 18h)</option>
+                </select>
+                <select id="status-at" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm">
+                    <option value="PRESENTE">Presente</option><option value="ATRASADO">Atrasado</option><option value="FALTA">Falta</option>
+                </select>
+                <button type="submit" class="w-full bg-[#2d5a27] text-white font-bold py-3 rounded-lg text-xs uppercase shadow-md">Registrar Militar</button>
             </form>
-            <ul id="lista-sentinelas-viva" class="mt-6 space-y-3 max-h-48 overflow-y-auto pr-2"></ul>
+            <ul id="lista-sentinelas-viva" class="mt-6 space-y-3 max-h-48 overflow-y-auto"></ul>
         </section>
 
         <!-- 2. LIVRO DE ALTERAÇÕES -->
-        <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <h3 class="text-[#1b3d1a] font-bold flex items-center gap-2 mb-6 uppercase text-sm border-b border-slate-100 pb-3">
-                <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
-                2. Livro de Alterações
-            </h3>
+        <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h3 class="text-[#1b3d1a] font-bold mb-6 uppercase text-sm border-b pb-3">2. Livro de Alterações</h3>
             <form id="form-alteracao" class="space-y-4">
-                <div>
-                    <label class="block text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1">Horário</label>
-                    <input type="time" id="hora-alteracao" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-slate-800 outline-none transition-all focus:ring-2 focus:ring-[#2d5a27]/30 focus:border-[#2d5a27]">
-                </div>
-                <div>
-                    <label class="block text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1">Descrição</label>
-                    <textarea id="desc-alteracao" rows="4" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-slate-800 outline-none transition-all focus:ring-2 focus:ring-[#2d5a27]/30 focus:border-[#2d5a27] placeholder:text-slate-400 resize-none" placeholder="Relate as novidades ou rondas..."></textarea>
-                </div>
-                <button type="submit" class="w-full bg-[#2d5a27] hover:bg-[#1b3d1a] text-white font-bold py-3.5 rounded-lg transition-all uppercase text-xs shadow-md shadow-[#2d5a27]/20 mt-2">
-                    Gravar no Livro
-                </button>
+                <input type="time" id="hora-alteracao" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm">
+                <textarea id="desc-alteracao" rows="4" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm resize-none" placeholder="Relate as ocorrências..."></textarea>
+                <button type="submit" class="w-full bg-[#2d5a27] text-white font-bold py-3 rounded-lg text-xs uppercase shadow-md">Gravar no Livro</button>
             </form>
-            <ul id="lista-alteracoes-viva" class="mt-6 space-y-3 max-h-48 overflow-y-auto pr-2"></ul>
+            <ul id="lista-alteracoes-viva" class="mt-6 space-y-3 max-h-48 overflow-y-auto"></ul>
         </section>
 
-        <!-- 3. QUADRO DE TRABALHO -->
-        <section class="bg-slate-50/50 p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow lg:row-span-2">
-            <h3 class="text-[#1b3d1a] font-bold flex items-center gap-2 mb-6 uppercase text-sm border-b border-slate-200 pb-3">
-                <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-                3. Quadro de Trabalho
-            </h3>
-            <div id="lista-trabalho-viva" class="space-y-3">
-                <!-- Injetado via JS -->
-            </div>
+        <!-- 3. CONTROLE DE PORTARIA -->
+        <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h3 class="text-[#1b3d1a] font-bold mb-6 uppercase text-sm border-b pb-3 text-blue-600">3. Controle de Portaria</h3>
+            <form id="form-visitante" class="space-y-4">
+                <input type="text" id="nome-vis" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm" placeholder="Nome do Visitante">
+                <div class="flex gap-4">
+                    <input type="text" id="rg-vis" required class="w-1/2 bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm" placeholder="RG">
+                    <input type="text" id="placa-vis" class="w-1/2 bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm" placeholder="Placa (Opcional)">
+                </div>
+                <input type="text" id="motivo-vis" required class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm" placeholder="Motivo da Visita">
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg text-xs uppercase shadow-md">Registrar Entrada</button>
+            </form>
+            <ul id="lista-visitantes-viva" class="mt-6 space-y-3 max-h-48 overflow-y-auto"></ul>
         </section>
 
-        <!-- 4. PASSAGEM DE CARGA -->
-        <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow lg:col-span-2">
-            <h3 class="text-[#1b3d1a] font-bold flex items-center gap-2 mb-6 uppercase text-sm border-b border-slate-100 pb-3">
-                <span class="w-2 h-2 bg-slate-400 rounded-full"></span>
-                4. Passagem de Carga e Fechamento
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-xl border border-slate-200 mb-6">
+        <!-- 4. CONTROLE DE RONDAS (NOVO) -->
+        <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h3 class="text-[#1b3d1a] font-bold mb-6 uppercase text-sm border-b pb-3 text-orange-600">4. Checklist de Rondas</h3>
+            <form id="form-ronda" class="space-y-4">
+                <div class="flex gap-4">
+                    <input type="time" id="hora-prevista-ronda" required class="flex-1 bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm">
+                    <button type="submit" class="bg-orange-600 text-white font-bold px-4 rounded-lg text-xs uppercase shadow-md">Agendar</button>
+                </div>
+            </form>
+            <ul id="lista-rondas-viva" class="mt-6 space-y-3 max-h-48 overflow-y-auto"></ul>
+        </section>
+
+        <!-- 5. QUADRO DE TRABALHO -->
+        <section class="bg-slate-50/50 p-6 rounded-xl border border-slate-200 shadow-sm lg:col-span-2">
+            <h3 class="text-[#1b3d1a] font-bold mb-6 uppercase text-sm border-b pb-3">5. Quadro de Trabalho Atual</h3>
+            <div id="lista-trabalho-viva" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </section>
+
+        <!-- 6. PASSAGEM DE CARGA -->
+        <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm lg:col-span-3">
+            <h3 class="text-[#1b3d1a] font-bold mb-6 uppercase text-sm border-b pb-3">6. Passagem de Carga e Fechamento</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-6 rounded-xl mb-6">
                 <div class="space-y-4">
-                    <div>
-                        <label class="block text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1">Rádios HT e Baterias</label>
-                        <select id="carga-radios" class="w-full bg-white border border-slate-300 rounded-lg p-3 text-slate-800 outline-none transition-all focus:ring-2 focus:ring-[#2d5a27]/30 focus:border-[#2d5a27]"><option>S/A (Sem alterações)</option><option>Com alterações (Ver obs)</option></select>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1">Armamento e Munição</label>
-                        <select id="carga-armamento" class="w-full bg-white border border-slate-300 rounded-lg p-3 text-slate-800 outline-none transition-all focus:ring-2 focus:ring-[#2d5a27]/30 focus:border-[#2d5a27]"><option>S/A (Sem alterações)</option><option>Com alterações (Ver obs)</option></select>
-                    </div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-500">Faxina/Manutenção</label>
+                    <select id="carga-faxina" class="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm"><option>S/A</option><option>Com alterações</option></select>
+                    <label class="block text-[11px] font-bold uppercase text-slate-500">Armamento/Munição</label>
+                    <select id="carga-armamento" class="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm"><option>S/A</option><option>Com alterações</option></select>
                 </div>
                 <div class="space-y-4">
-                    <div>
-                        <label class="block text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1">Chaves e Instalações</label>
-                        <select id="carga-chaves" class="w-full bg-white border border-slate-300 rounded-lg p-3 text-slate-800 outline-none transition-all focus:ring-2 focus:ring-[#2d5a27]/30 focus:border-[#2d5a27]"><option>S/A (Sem alterações)</option><option>Com alterações (Ver obs)</option></select>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1">Observação de Carga</label>
-                        <input type="text" id="carga-obs" class="w-full bg-white border border-slate-300 rounded-lg p-3 text-slate-800 outline-none transition-all focus:ring-2 focus:ring-[#2d5a27]/30 focus:border-[#2d5a27] placeholder:text-slate-400" placeholder="Ex: Rádio 2 com bateria viciada.">
-                    </div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-500">Chaves/Instalações</label>
+                    <select id="carga-chaves" class="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm"><option>S/A</option><option>Com alterações</option></select>
+                    <label class="block text-[11px] font-bold uppercase text-slate-500">Observações de Carga</label>
+                    <input type="text" id="carga-obs" class="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm" placeholder="Ex: Rádio 2 com bateria viciada.">
                 </div>
             </div>
-
-            <div class="flex flex-col md:flex-row gap-6 mb-8">
-                <div class="flex-1">
-                    <label class="block text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1">Data do Serviço</label>
-                    <input type="date" id="data-servico" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-slate-800 outline-none transition-all focus:ring-2 focus:ring-[#2d5a27]/30 focus:border-[#2d5a27]">
-                </div>
-                <div class="flex-1">
-                    <label class="block text-[11px] uppercase tracking-wider text-slate-500 font-bold mb-1">Cmt da Guarda (Nº e Nome)</label>
-                    <input type="text" id="cmt-guarda" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-slate-800 outline-none transition-all focus:ring-2 focus:ring-[#2d5a27]/30 focus:border-[#2d5a27] placeholder:text-slate-400" placeholder="Ex: Mon 10 Silva">
-                </div>
+            <div class="flex gap-6 mb-8">
+                <input type="date" id="data-servico" class="w-1/2 bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm">
+                <input type="text" id="cmt-guarda" class="w-1/2 bg-slate-50 border border-slate-300 rounded-lg p-3 text-sm" placeholder="Cmt da Guarda (Ex: At Dias)">
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button onclick="gerarRelatorioAtual()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg transition-all text-xs uppercase shadow-md shadow-blue-600/20">Visualizar Parte</button>
-                <button onclick="encerrarESalvarGuarda()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-lg transition-all text-xs uppercase shadow-md shadow-red-600/20">Encerrar e Salvar Histórico</button>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="gerarRelatorioAtual()" class="bg-blue-600 text-white font-bold py-4 rounded-lg text-xs uppercase shadow-md">Visualizar Parte</button>
+                <button onclick="encerrarESalvarGuarda()" class="bg-red-600 text-white font-bold py-4 rounded-lg text-xs uppercase shadow-md">Encerrar Serviço</button>
             </div>
         </section>
 
-        <!-- 5. HISTÓRICO -->
-        <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow lg:col-span-3">
-            <h3 class="text-[#1b3d1a] font-bold flex items-center gap-2 mb-6 uppercase text-sm border-b border-slate-100 pb-3">
-                <span class="w-2 h-2 bg-purple-500 rounded-full"></span>
-                5. Arquivo / Histórico de Serviços
-            </h3>
-            <div class="overflow-x-auto rounded-lg border border-slate-200">
-                <table class="w-full text-left border-collapse bg-white">
-                    <thead class="bg-slate-50">
-                        <tr class="text-[11px] uppercase tracking-wider text-slate-500 border-b border-slate-200">
-                            <th class="p-4 font-bold">Data do Serviço</th>
-                            <th class="p-4 font-bold">Comandante da Guarda</th>
-                            <th class="p-4 font-bold text-right">Ações Oficiais</th>
-                        </tr>
-                    </thead>
-                    <tbody id="corpo-historico" class="divide-y divide-slate-100">
-                        <!-- Injetado via JS -->
-                    </tbody>
-                </table>
-            </div>
+        <!-- 7. HISTÓRICO -->
+        <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm lg:col-span-3">
+            <h3 class="text-[#1b3d1a] font-bold mb-6 uppercase text-sm border-b pb-3">7. Arquivo / Histórico de Serviços</h3>
+            <div class="overflow-x-auto"><table class="w-full text-left bg-white"><thead class="bg-slate-50"><tr class="text-[11px] uppercase border-b"><th class="p-4">Data</th><th class="p-4">Cmt da Guarda</th><th class="p-4 text-right">Ações</th></tr></thead><tbody id="corpo-historico" class="divide-y"></tbody></table></div>
         </section>
     </div>
 
-    <!-- MODAL DO RELATÓRIO (PDF NATIVO) -->
-    <div id="painel-relatorio" class="fixed inset-0 bg-slate-900/80 z-50 hidden p-4 overflow-y-auto backdrop-blur-sm">
-        <div class="max-w-4xl mx-auto bg-white text-black p-8 rounded-xl shadow-2xl mt-10 border border-slate-200">
+    <!-- MODAL RELATÓRIO (PDF NATIVO) -->
+    <div id="painel-relatorio" class="fixed inset-0 bg-slate-900/80 z-50 hidden p-4 overflow-y-auto">
+        <div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-2xl mt-10">
             <div id="conteudo-para-pdf">
-                <div class="text-center border-b-2 border-black pb-4 mb-6">
-                    <h2 class="text-2xl font-bold uppercase" id="titulo-relatorio">PARTE DA GUARDA</h2>
-                    <p class="text-sm font-semibold">TG 02-009 - Bragança Paulista/SP</p>
+                <div class="text-center border-b-2 border-black pb-4 mb-6"><h2 class="text-2xl font-bold uppercase">PARTE DA GUARDA</h2><p class="text-sm font-semibold">TG 02-009 - Bragança Paulista/SP</p></div>
+                <div class="grid grid-cols-2 gap-4 mb-8 text-sm"><p><strong>Data:</strong> <span id="data-relatorio"></span></p><p><strong>Cmt da Guarda:</strong> <span id="relatorio-cmt"></span></p></div>
+                <div class="mb-8 text-sm"><h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">1. Passagem de Carga e Material</h4>
+                    <table class="w-full border border-black text-xs"><tr class="border-b"><td class="p-2 border-r font-bold w-1/3">Faxina/Manutenção:</td><td id="pdf-faxina" class="p-2"></td></tr><tr class="border-b"><td class="p-2 border-r font-bold">Armamento/Munição:</td><td id="pdf-armamento" class="p-2"></td></tr><tr class="border-b"><td class="p-2 border-r font-bold">Chaves/Instalações:</td><td id="pdf-chaves" class="p-2"></td></tr><tr><td class="p-2 border-r font-bold">Observações:</td><td id="pdf-obs" class="p-2"></td></tr></table>
                 </div>
-                <div class="grid grid-cols-2 gap-4 mb-8 text-sm">
-                    <p><strong>Data do Serviço:</strong> <span id="data-relatorio"></span></p>
-                    <p><strong>Comandante da Guarda:</strong> <span id="relatorio-cmt"></span></p>
+                <div class="mb-8 text-sm"><h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">2. Efetivo da Guarda</h4>
+                    <table class="w-full border border-black text-[10px]"><thead class="bg-slate-100"><tr class="border-b"><th class="p-2 border-r w-8">Nº</th><th class="p-2 border-r">Nome de Guerra</th><th class="p-2 border-r">Função/Turno</th><th class="p-2 border-r w-16">Status</th><th class="p-2">Posto / Atividade</th></tr></thead><tbody id="corpo-efetivo"></tbody></table>
                 </div>
-                <div class="mb-8 text-sm">
-                    <h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">1. Passagem de Carga e Material</h4>
-                    <table class="w-full border border-black">
-                        <tr class="border-b border-black"><td class="p-2 border-r border-black font-bold w-1/3">Rádios HT:</td><td id="pdf-radios" class="p-2"></td></tr>
-                        <tr class="border-b border-black"><td class="p-2 border-r border-black font-bold">Armamento/Munição:</td><td id="pdf-armamento" class="p-2"></td></tr>
-                        <tr class="border-b border-black"><td class="p-2 border-r border-black font-bold">Chaves/Instalações:</td><td id="pdf-chaves" class="p-2"></td></tr>
-                        <tr><td class="p-2 border-r border-black font-bold">Observações:</td><td id="pdf-obs" class="p-2"></td></tr>
-                    </table>
+                <div class="mb-8 text-sm"><h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">3. Controle de Portaria (Visitantes e Veículos)</h4>
+                    <table class="w-full border border-black text-[10px]"><thead class="bg-slate-100"><tr class="border-b"><th class="p-2 border-r">Nome do Visitante</th><th class="p-2 border-r w-24">RG</th><th class="p-2 border-r w-20">Placa</th><th class="p-2 border-r">Motivo</th><th class="p-2 w-16">E/S</th></tr></thead><tbody id="corpo-visitantes-pdf"></tbody></table>
                 </div>
-                <div class="mb-8 text-sm">
-                    <h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">2. Efetivo da Guarda</h4>
-                    <table class="w-full border border-black text-sm">
-                        <thead class="bg-slate-100"><tr class="border-b border-black text-left"><th class="p-2 border-r border-black w-12">Nº</th><th class="p-2 border-r border-black">Nome de Guerra</th><th class="p-2 border-r border-black w-24">Situação</th><th class="p-2">Status Final/Atividade</th></tr></thead>
-                        <tbody id="corpo-efetivo"></tbody>
-                    </table>
+                <!-- NOVO: TABELA DE RONDAS NO PDF -->
+                <div class="mb-8 text-sm"><h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">4. Checklist de Rondas</h4>
+                    <table class="w-full border border-black text-[10px]"><thead class="bg-slate-100"><tr class="border-b"><th class="p-2 border-r w-24">Hora Prevista</th><th class="p-2 border-r w-24">Hora Realizada</th><th class="p-2 border-r">Responsável</th><th class="p-2 w-20">Status</th></tr></thead><tbody id="corpo-rondas-pdf"></tbody></table>
                 </div>
-                <div class="mb-8 text-sm">
-                    <h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">3. Registro de Ocorrências</h4>
-                    <table class="w-full border border-black text-sm">
-                        <thead class="bg-slate-100"><tr class="border-b border-black text-left"><th class="p-2 border-r border-black w-24">Horário</th><th class="p-2">Descrição</th></tr></thead>
-                        <tbody id="corpo-alteracoes"></tbody>
-                    </table>
+                <div class="mb-8 text-sm"><h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">5. Registro de Ocorrências</h4>
+                    <table class="w-full border border-black text-[10px]"><thead class="bg-slate-100"><tr class="border-b"><th class="p-2 border-r w-20">Horário</th><th class="p-2">Descrição</th></tr></thead><tbody id="corpo-alteracoes"></tbody></table>
                 </div>
-                <div class="mt-20 text-center text-sm" style="page-break-inside: avoid;">
-                    <p class="border-t border-black w-1/2 mx-auto pt-2 font-bold" id="assinatura-cmt"></p>
-                    <p>Comandante da Guarda</p>
-                </div>
+                <div class="mt-20 text-center text-sm"><p class="border-t border-black w-1/2 mx-auto pt-2 font-bold" id="assinatura-cmt"></p><p>Comandante da Guarda</p></div>
             </div>
-            
             <div class="flex gap-4 mt-10 botoes-impressao">
-                <button onclick="fecharRelatorio()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800 p-4 rounded-lg font-bold uppercase text-xs transition-colors border border-slate-300">Fechar Janela</button>
-                <button onclick="exportarPDF()" class="flex-1 bg-[#2d5a27] hover:bg-[#1b3d1a] text-white p-4 rounded-lg font-bold uppercase text-xs shadow-md transition-colors">Imprimir / Salvar PDF Oficial</button>
+                <button onclick="fecharRelatorio()" class="flex-1 bg-slate-200 p-4 rounded-lg font-bold uppercase text-xs">Fechar</button>
+                <button onclick="exportarPDF()" class="flex-1 bg-[#2d5a27] text-white p-4 rounded-lg font-bold uppercase text-xs">Imprimir PDF Oficial</button>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPTS -->
     <script>
         const API_URL = '/api/livro-guarda';
         let historicoCompleto = [];
@@ -268,238 +184,173 @@
         function updateClock() { document.getElementById('clock').innerText = new Date().toLocaleTimeString('pt-BR'); }
         setInterval(updateClock, 1000);
 
-        async function fazerLogout() { if(confirm("Deseja realmente sair?")) { await fetch('/api/logout', { method: 'POST' }); window.location.reload(); } }
+        async function fazerLogout() { if(confirm("Sair?")) { await fetch('/api/logout', { method: 'POST' }); window.location.reload(); } }
 
-        function setarHoraAtual() {
-            const agora = new Date();
-            document.getElementById('hora-alteracao').value = `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
-        }
-        function formatarDataInput(d) { const p = d.split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : 'Data não informada'; }
-        function setarDataAtual() {
-            const h = new Date();
-            document.getElementById('data-servico').value = `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}-${String(h.getDate()).padStart(2, '0')}`;
-        }
+        function setarHoraAtual() { document.getElementById('hora-alteracao').value = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}); }
+        function setarDataAtual() { const h = new Date(); document.getElementById('data-servico').value = `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}-${String(h.getDate()).padStart(2, '0')}`; }
 
         async function carregarCargoUsuario() {
-            try {
-                const resposta = await fetch(`${API_URL}/me`);
-                if (resposta.ok) {
-                    const painel = await resposta.text();
-                    const label = document.getElementById('label-painel');
-                    label.innerText = painel;
-                    if(painel === "PAINEL DO SUBTENENTE") {
-                        label.classList.replace('text-slate-400', 'text-purple-600');
-                    }
-                }
-            } catch (erro) {
-                document.getElementById('label-painel').innerText = "PAINEL OFF-LINE";
+            const resp = await fetch(`${API_URL}/me`);
+            if (resp.ok) {
+                const p = await resp.text();
+                document.getElementById('label-painel').innerText = p;
+                if(p.includes("SUBTENENTE")) document.getElementById('label-painel').classList.replace('text-slate-400', 'text-purple-600');
             }
         }
 
         async function atualizarListasVivas() {
             try {
-                const resposta = await fetch(`${API_URL}/relatorio`);
-                if(!resposta.ok) return;
-                const relatorio = await resposta.json();
+                const resp = await fetch(`${API_URL}/relatorio`);
+                const data = await resp.json();
                 
-                const listaSent = document.getElementById('lista-sentinelas-viva');
-                const listaTrabalho = document.getElementById('lista-trabalho-viva');
-                listaSent.innerHTML = ''; listaTrabalho.innerHTML = ''; 
+                const lS = document.getElementById('lista-sentinelas-viva');
+                const lT = document.getElementById('lista-trabalho-viva');
+                const lA = document.getElementById('lista-alteracoes-viva');
+                const lV = document.getElementById('lista-visitantes-viva');
+                const lR = document.getElementById('lista-rondas-viva');
+                
+                lS.innerHTML = ''; lT.innerHTML = ''; lA.innerHTML = ''; lV.innerHTML = ''; lR.innerHTML = '';
 
-                relatorio.sentinelas.forEach(at => {
-                    let badgeColor = at.status === 'PRESENTE' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 
-                                     at.status === 'ATRASADO' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-rose-100 text-rose-700 border-rose-200';
-                    
-                    listaSent.innerHTML += `
-                        <li class="bg-white border border-slate-200 p-3.5 flex justify-between items-center rounded-lg shadow-sm group border-l-4 border-l-[#2d5a27]">
-                            <span class="text-sm font-bold text-slate-700">At ${at.numero} ${at.nomeGuerra} <span class="ml-2 px-2 py-0.5 rounded-full text-[10px] border ${badgeColor}">${at.status}</span></span>
-                            <button class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 text-xs font-bold transition-all" onclick="removerSentinela(${at.id})">REMOVER</button>
-                        </li>
-                    `;
-
-                    if(at.status !== 'FALTA') {
-                        const sel = (op) => at.atividadeAtual === op ? 'selected' : '';
-                        listaTrabalho.innerHTML += `
-                            <div class="bg-white p-4 rounded-xl border border-slate-200 hover:border-[#2d5a27] hover:shadow-md transition-all">
-                                <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Posto Atual</p>
-                                <div class="flex justify-between items-center">
-                                    <span class="font-bold text-sm text-slate-800">At ${at.numero} ${at.nomeGuerra}</span>
-                                    <select class="bg-slate-50 border border-slate-200 text-[#2d5a27] p-1.5 rounded text-xs font-bold outline-none cursor-pointer focus:ring-1 focus:ring-[#2d5a27]" onchange="alterarAtividade(${at.id}, this.value)">
-                                        <option value="Prontidão" ${sel('Prontidão')}>Prontidão</option>
-                                        <option value="Posto 1 (Portão)" ${sel('Posto 1 (Portão)')}>Posto 1 (Portão)</option>
-                                        <option value="Posto 2 (Fundos)" ${sel('Posto 2 (Fundos)')}>Posto 2 (Fundos)</option>
-                                        <option value="Ronda" ${sel('Ronda')}>Ronda</option>
-                                        <option value="Dormindo/Descanso" ${sel('Dormindo/Descanso')}>Dormindo/Descanso</option>
-                                    </select>
-                                </div>
-                            </div>
-                        `;
+                data.sentinelas.forEach(s => {
+                    lS.innerHTML += `<li class="bg-white border p-3 flex justify-between rounded-lg shadow-sm border-l-4 border-l-[#2d5a27]"><div class="flex flex-col"><span class="text-sm font-bold">At ${s.numero} ${s.nomeGuerra} <span class="ml-2 text-[9px] uppercase border px-1 rounded">${s.status}</span></span><span class="text-[9px] text-slate-400">${s.funcao}</span></div><button onclick="removerSentinela(${s.id})" class="text-red-500 text-[10px] font-bold">X</button></li>`;
+                    if(s.status !== 'FALTA') {
+                        lT.innerHTML += `<div class="bg-white p-4 rounded-xl border border-slate-200"><p class="text-[9px] text-slate-400 font-bold mb-1">POSTO ATUAL</p><div class="flex justify-between items-center"><span class="font-bold text-sm">At ${s.numero} ${s.nomeGuerra}</span><select class="bg-slate-50 border p-1 rounded text-[10px] font-bold" onchange="alterarAtividade(${s.id}, this.value)"><option value="Prontidão" ${s.atividadeAtual==='Prontidão'?'selected':''}>Prontidão</option><option value="Posto 1 (Portão)" ${s.atividadeAtual==='Posto 1 (Portão)'?'selected':''}>Posto 1 (Portão)</option><option value="Posto 2 (Fundos)" ${s.atividadeAtual==='Posto 2 (Fundos)'?'selected':''}>Posto 2 (Fundos)</option><option value="Ronda" ${s.atividadeAtual==='Ronda'?'selected':''}>Ronda</option><option value="Permanência" ${s.atividadeAtual==='Permanência'?'selected':''}>Permanência</option></select></div></div>`;
                     }
                 });
 
-                const listaAlt = document.getElementById('lista-alteracoes-viva');
-                listaAlt.innerHTML = ''; 
-                relatorio.alteracoes.forEach(alt => {
-                    listaAlt.innerHTML += `
-                        <li class="bg-amber-50/50 border border-amber-100 p-3 flex justify-between items-start rounded-lg group border-l-4 border-l-amber-500 shadow-sm">
-                            <div class="text-[12px] text-slate-700">
-                                <span class="text-amber-600 font-mono font-bold">[${alt.horario}]</span>
-                                <span class="ml-2">${alt.descricao}</span>
-                            </div>
-                            <button class="opacity-0 group-hover:opacity-100 text-red-500 text-xs font-bold ml-4" onclick="removerAlteracao(${alt.id})">X</button>
-                        </li>
-                    `;
+                data.alteracoes.forEach(a => { lA.innerHTML += `<li class="bg-amber-50 border p-3 flex justify-between rounded-lg shadow-sm border-l-4 border-l-amber-500 text-[11px]"><div class="flex flex-col"><span class="font-bold text-amber-700">[${a.horario}]</span><span>${a.descricao}</span></div><button onclick="removerAlteracao(${a.id})" class="text-red-500 font-bold ml-4">X</button></li>`; });
+
+                data.visitantes.forEach(v => {
+                    const statusSaida = v.horaSaida === '--:--' ? `<button onclick="registrarSaidaVisitante(${v.id})" class="bg-red-50 text-red-600 px-2 py-0.5 rounded border border-red-200 text-[9px] font-bold">REGISTRAR SAÍDA</button>` : `<span class="text-[10px] font-bold text-green-600">SAÍDA: ${v.horaSaida}</span>`;
+                    lV.innerHTML += `<li class="bg-white border p-3 flex justify-between items-center rounded-lg shadow-sm border-l-4 border-l-blue-600"><div class="flex flex-col"><span class="text-sm font-bold text-blue-800">${v.nome} <span class="text-[10px] font-normal text-slate-400">(${v.rg})</span></span><span class="text-[10px] text-slate-500">${v.motivo} ${v.placaVeiculo?'| Placa: '+v.placaVeiculo:''}</span><span class="text-[10px] font-bold">ENTRADA: ${v.horaEntrada}</span></div><div class="flex flex-col items-end gap-1">${statusSaida}<button onclick="removerVisitante(${v.id})" class="text-slate-300 hover:text-red-500 text-[9px]">EXCLUIR</button></div></li>`;
                 });
-            } catch (erro) {}
+
+                data.rondas.forEach(r => {
+                    const btnAcao = r.concluida ? `<span class="text-[10px] font-bold text-emerald-600">FEITA ÀS ${r.horarioRealizado}</span>` : `<button onclick="realizarRonda(${r.id})" class="bg-orange-100 text-orange-700 px-3 py-1 rounded border border-orange-300 text-[10px] font-bold">EXECUTAR AGORA</button>`;
+                    lR.innerHTML += `<li class="bg-white border p-3 flex justify-between items-center rounded-lg shadow-sm border-l-4 border-l-orange-500"><div class="flex flex-col"><span class="text-sm font-bold text-orange-800">Ronda das ${r.horarioPrevisto}</span><span class="text-[10px] text-slate-500">Resp: ${r.responsavel}</span></div><div class="flex flex-col items-end gap-1">${btnAcao}<button onclick="removerRonda(${r.id})" class="text-slate-300 hover:text-red-500 text-[9px]">EXCLUIR</button></div></li>`;
+                });
+
+            } catch(e){}
         }
 
         async function carregarHistoricos() {
-            const corpoHist = document.getElementById('corpo-historico');
-            try {
-                const resposta = await fetch(`${API_URL}/historico`);
-                historicoCompleto = await resposta.json();
-                corpoHist.innerHTML = '';
-                
-                if(!Array.isArray(historicoCompleto) || historicoCompleto.length === 0) {
-                    corpoHist.innerHTML = '<tr><td colspan="3" class="p-8 text-center text-sm font-medium text-slate-400">NENHUM SERVIÇO ARQUIVADO.</td></tr>';
-                    return;
-                }
-
-                historicoCompleto.forEach((hist, index) => {
-                    corpoHist.innerHTML += `
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="p-4 text-sm font-bold text-slate-800">${hist.dataServico}</td>
-                            <td class="p-4 text-sm text-slate-600 uppercase">${hist.cmtGuarda}</td>
-                            <td class="p-4 text-right flex justify-end gap-2">
-                                <button class="px-4 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-600 hover:text-white rounded-lg text-xs font-bold uppercase transition-all shadow-sm" onclick="visualizarHistorico(${index})">Abrir PDF</button>
-                                <button class="px-4 py-1.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-600 hover:text-white rounded-lg text-xs font-bold uppercase transition-all shadow-sm" onclick="excluirHistorico(${hist.id})">Apagar</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } catch (erro) { 
-                corpoHist.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-600 bg-red-50 text-xs font-bold">Erro de conexão com o Banco de Dados.</td></tr>';
-            }
+            const resp = await fetch(`${API_URL}/historico`);
+            historicoCompleto = await resp.json();
+            const c = document.getElementById('corpo-historico'); c.innerHTML = '';
+            if(!historicoCompleto.length) { c.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-slate-400">VAZIO</td></tr>'; return; }
+            historicoCompleto.forEach((h, i) => { c.innerHTML += `<tr class="hover:bg-slate-50"><td class="p-4 text-sm font-bold">${h.dataServico}</td><td class="p-4 text-sm uppercase">${h.cmtGuarda}</td><td class="p-4 text-right flex justify-end gap-2"><button onclick="visualizarHistorico(${i})" class="px-4 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold">PDF</button><button onclick="excluirHistorico(${h.id})" class="px-4 py-1.5 bg-red-50 text-red-600 rounded-lg text-[10px] font-bold">DELETAR</button></td></tr>`; });
         }
 
-        async function excluirHistorico(id) {
-            if (confirm("ORDEM CRÍTICA: Deseja apagar permanentemente este registro? (Restrito a Subtenentes)")) {
-                try {
-                    const resposta = await fetch(`${API_URL}/historico/${id}`, { method: 'DELETE' });
-                    if (resposta.ok) { carregarHistoricos(); } 
-                    else if (resposta.status === 403) { alert("ACESSO NEGADO: Apenas Subtenentes podem apagar históricos."); }
-                } catch (erro) {}
-            }
+        async function registrarSaidaVisitante(id) {
+            const h = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            await fetch(`${API_URL}/visitante/${id}/saida`, { method: 'PUT', headers: {'Content-Type': 'text/plain'}, body: h });
+            atualizarListasVivas();
         }
 
-        async function alterarAtividade(id, novaAtividade) { try { await fetch(`${API_URL}/sentinela/${id}/atividade`, { method: 'PUT', headers: { 'Content-Type': 'text/plain' }, body: novaAtividade }); } catch(erro) {} }
-        async function removerSentinela(id) { if(confirm("Remover?")) { await fetch(`${API_URL}/sentinela/${id}`, { method: 'DELETE' }); atualizarListasVivas(); } }
-        async function removerAlteracao(id) { if(confirm("Remover?")) { await fetch(`${API_URL}/alteracao/${id}`, { method: 'DELETE' }); atualizarListasVivas(); } }
+        async function realizarRonda(id) {
+            const respNome = prompt("Nome de quem realizou a ronda (Ex: At Dias):");
+            if(!respNome) return;
+            const h = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            await fetch(`${API_URL}/ronda/${id}/realizar`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({responsavel: respNome, horarioRealizado: h}) });
+            atualizarListasVivas();
+        }
 
-        document.getElementById('form-sentinela').addEventListener('submit', async (e) => {
+        async function excluirHistorico(id) { if(confirm("ORDEM CRÍTICA: Apagar permanentemente?")) { const r = await fetch(`${API_URL}/historico/${id}`, { method: 'DELETE' }); if(r.ok) carregarHistoricos(); else alert("SEM PERMISSÃO"); } }
+        async function alterarAtividade(id, a) { await fetch(`${API_URL}/sentinela/${id}/atividade`, { method: 'PUT', headers: {'Content-Type': 'text/plain'}, body: a }); }
+        async function removerSentinela(id) { await fetch(`${API_URL}/sentinela/${id}`, { method: 'DELETE' }); atualizarListasVivas(); }
+        async function removerAlteracao(id) { await fetch(`${API_URL}/alteracao/${id}`, { method: 'DELETE' }); atualizarListasVivas(); }
+        async function removerVisitante(id) { await fetch(`${API_URL}/visitante/${id}`, { method: 'DELETE' }); atualizarListasVivas(); }
+        async function removerRonda(id) { await fetch(`${API_URL}/ronda/${id}`, { method: 'DELETE' }); atualizarListasVivas(); }
+
+        document.getElementById('form-sentinela').onsubmit = async (e) => {
             e.preventDefault();
-            const sentinela = { numero: document.getElementById('num-at').value, nomeGuerra: document.getElementById('nome-at').value, status: document.getElementById('status-at').value };
-            await fetch(`${API_URL}/sentinela`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sentinela) });
-            document.getElementById('form-sentinela').reset(); document.getElementById('num-at').focus(); atualizarListasVivas();
-        });
+            const s = { numero: document.getElementById('num-at').value, nomeGuerra: document.getElementById('nome-at').value, funcao: document.getElementById('funcao-at').value, status: document.getElementById('status-at').value };
+            await fetch(`${API_URL}/sentinela`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(s) });
+            e.target.reset(); atualizarListasVivas();
+        };
 
-        document.getElementById('form-alteracao').addEventListener('submit', async (e) => {
+        document.getElementById('form-alteracao').onsubmit = async (e) => {
             e.preventDefault();
-            const alteracao = { horario: document.getElementById('hora-alteracao').value, descricao: document.getElementById('desc-alteracao').value };
-            await fetch(`${API_URL}/alteracao`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(alteracao) });
-            document.getElementById('form-alteracao').reset(); setarHoraAtual(); atualizarListasVivas(); 
-        });
+            const a = { horario: document.getElementById('hora-alteracao').value, descricao: document.getElementById('desc-alteracao').value };
+            await fetch(`${API_URL}/alteracao`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(a) });
+            e.target.reset(); setarHoraAtual(); atualizarListasVivas();
+        };
 
-        function desenharRelatorio(titulo, data, cmt, radios, armamento, chaves, obs, sentinelas, alteracoes) {
-            document.getElementById('titulo-relatorio').innerText = titulo;
-            document.getElementById('data-relatorio').innerText = data;
+        document.getElementById('form-visitante').onsubmit = async (e) => {
+            e.preventDefault();
+            const h = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            const v = { nome: document.getElementById('nome-vis').value, rg: document.getElementById('rg-vis').value, placaVeiculo: document.getElementById('placa-vis').value, motivo: document.getElementById('motivo-vis').value, horaEntrada: h };
+            await fetch(`${API_URL}/visitante`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(v) });
+            e.target.reset(); atualizarListasVivas();
+        };
+
+        document.getElementById('form-ronda').onsubmit = async (e) => {
+            e.preventDefault();
+            const r = { horarioPrevisto: document.getElementById('hora-prevista-ronda').value };
+            await fetch(`${API_URL}/ronda`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(r) });
+            e.target.reset(); atualizarListasVivas();
+        };
+
+        function desenharRelatorio(t, d, cmt, f, a, ch, o, sentinelas, alteracoes, visitantes = [], rondas = []) {
+            document.getElementById('data-relatorio').innerText = d;
             document.getElementById('relatorio-cmt').innerText = cmt;
             document.getElementById('assinatura-cmt').innerText = cmt.toUpperCase();
-            document.getElementById('pdf-radios').innerText = radios;
-            document.getElementById('pdf-armamento').innerText = armamento;
-            document.getElementById('pdf-chaves').innerText = chaves;
-            document.getElementById('pdf-obs').innerText = obs ? obs : "Nenhuma observação registrada.";
+            document.getElementById('pdf-faxina').innerText = f;
+            document.getElementById('pdf-armamento').innerText = a;
+            document.getElementById('pdf-chaves').innerText = ch;
+            document.getElementById('pdf-obs').innerText = o || "S/A";
 
-            const corpoEfetivo = document.getElementById('corpo-efetivo');
-            corpoEfetivo.innerHTML = '';
-            sentinelas.forEach(at => {
-                corpoEfetivo.innerHTML += `<tr class="border-b border-black text-sm">
-                    <td class="p-1 border-r border-black font-mono text-center">${at.numero}</td>
-                    <td class="p-1 border-r border-black">${at.nomeGuerra}</td>
-                    <td class="p-1 border-r border-black font-bold text-[10px] text-center uppercase">${at.status}</td>
-                    <td class="p-1">${at.status === 'FALTA' ? 'N/A' : at.atividadeAtual}</td>
-                </tr>`;
+            const cE = document.getElementById('corpo-efetivo'); cE.innerHTML = '';
+            sentinelas.sort((a,b)=>a.funcao.includes('Permanência')?-1:1).forEach(s => {
+                cE.innerHTML += `<tr class="border-b"><td class="p-1 border-r text-center">${s.numero}</td><td class="p-1 border-r">${s.nomeGuerra}</td><td class="p-1 border-r">${s.funcao}</td><td class="p-1 border-r text-center font-bold">${s.status}</td><td class="p-1">${s.atividadeAtual}</td></tr>`;
             });
 
-            const corpoAlt = document.getElementById('corpo-alteracoes');
-            corpoAlt.innerHTML = '';
-            if (alteracoes.length === 0) { corpoAlt.innerHTML = `<tr><td colspan="2" class="p-4 text-center italic text-slate-500">Serviço transcorreu sem alterações.</td></tr>`; } 
-            else {
-                alteracoes.forEach(alt => {
-                    corpoAlt.innerHTML += `<tr class="border-b border-black text-sm">
-                        <td class="p-1 border-r border-black font-mono font-bold">${alt.horario}</td>
-                        <td class="p-1">${alt.descricao}</td>
-                    </tr>`;
-                });
-            }
+            const cV = document.getElementById('corpo-visitantes-pdf'); cV.innerHTML = '';
+            if(!visitantes.length) cV.innerHTML = '<tr><td colspan="5" class="p-2 text-center italic">Nenhum visitante registrado.</td></tr>';
+            else visitantes.forEach(v => { cV.innerHTML += `<tr class="border-b"><td class="p-1 border-r">${v.nome}</td><td class="p-1 border-r text-center">${v.rg}</td><td class="p-1 border-r text-center">${v.placaVeiculo||'--'}</td><td class="p-1 border-r">${v.motivo}</td><td class="p-1 text-center font-bold">${v.horaEntrada}/${v.horaSaida}</td></tr>`; });
+
+            const cR = document.getElementById('corpo-rondas-pdf'); cR.innerHTML = '';
+            if(!rondas.length) cR.innerHTML = '<tr><td colspan="4" class="p-2 text-center italic">Nenhuma ronda registrada.</td></tr>';
+            else rondas.forEach(r => { cR.innerHTML += `<tr class="border-b"><td class="p-1 border-r text-center font-bold">${r.horarioPrevisto}</td><td class="p-1 border-r text-center font-bold">${r.horarioRealizado}</td><td class="p-1 border-r">${r.responsavel}</td><td class="p-1 text-center ${r.concluida?'text-green-600 font-bold':'text-red-600 font-bold'}">${r.concluida?'REALIZADA':'PENDENTE'}</td></tr>`; });
+
+            const cA = document.getElementById('corpo-alteracoes'); cA.innerHTML = '';
+            if(!alteracoes.length) cA.innerHTML = '<tr><td colspan="2" class="p-2 text-center italic">S/A</td></tr>';
+            else alteracoes.forEach(alt => { cA.innerHTML += `<tr class="border-b"><td class="p-1 border-r font-bold">${alt.horario}</td><td class="p-1">${alt.descricao}</td></tr>`; });
+
             document.getElementById('painel-relatorio').classList.remove('hidden');
         }
 
         async function gerarRelatorioAtual() {
-            const resposta = await fetch(`${API_URL}/relatorio`);
-            const relatorio = await resposta.json();
-            const dataFormatada = formatarDataInput(document.getElementById('data-servico').value);
-            let nomeCmt = document.getElementById('cmt-guarda').value || "NÃO INFORMADO";
-            desenharRelatorio("PARTE DA GUARDA - RELATÓRIO DO SERVIÇO", dataFormatada, nomeCmt, document.getElementById('carga-radios').value, document.getElementById('carga-armamento').value, document.getElementById('carga-chaves').value, document.getElementById('carga-obs').value, relatorio.sentinelas, relatorio.alteracoes);
+            const resp = await fetch(`${API_URL}/relatorio`);
+            const d = await resp.json();
+            const dF = document.getElementById('data-servico').value.split('-').reverse().join('/');
+            desenharRelatorio("PARTE DA GUARDA", dF, document.getElementById('cmt-guarda').value || "NÃO INFORMADO", document.getElementById('carga-faxina').value, document.getElementById('carga-armamento').value, document.getElementById('carga-chaves').value, document.getElementById('carga-obs').value, d.sentinelas, d.alteracoes, d.visitantes, d.rondas);
         }
 
-        function visualizarHistorico(index) {
-            const hist = historicoCompleto[index];
-            const dados = JSON.parse(hist.dadosJson); 
-            desenharRelatorio("CÓPIA DE ARQUIVO - PARTE DA GUARDA", hist.dataServico, hist.cmtGuarda, dados.cargaRadios, dados.cargaArmamento, dados.cargaChaves, dados.cargaObs, dados.sentinelas, dados.alteracoes);
+        function visualizarHistorico(idx) {
+            const h = historicoCompleto[idx]; const d = JSON.parse(h.dadosJson);
+            desenharRelatorio("ARQUIVO", h.dataServico, h.cmtGuarda, d.cargaFaxina||"S/A", d.cargaArmamento, d.cargaChaves, d.cargaObs, d.sentinelas, d.alteracoes, d.visitantes||[], d.rondas||[]);
         }
 
         async function encerrarESalvarGuarda() {
-            let nomeCmt = document.getElementById('cmt-guarda').value;
-            if(!nomeCmt) { alert("Preencha o Cmt da Guarda!"); return; }
-            if(confirm("Encerrar o serviço?")) {
-                const resposta = await fetch(`${API_URL}/relatorio`);
-                const relatorio = await resposta.json();
-                const payload = {
-                    dataServico: formatarDataInput(document.getElementById('data-servico').value),
-                    cmtGuarda: nomeCmt,
-                    dadosJson: JSON.stringify({
-                        cargaRadios: document.getElementById('carga-radios').value,
-                        cargaArmamento: document.getElementById('carga-armamento').value,
-                        cargaChaves: document.getElementById('carga-chaves').value,
-                        cargaObs: document.getElementById('carga-obs').value,
-                        sentinelas: relatorio.sentinelas,
-                        alteracoes: relatorio.alteracoes
-                    })
+            if(!document.getElementById('cmt-guarda').value) return alert("Preencha o Cmt!");
+            if(confirm("Encerrar serviço?")) {
+                const r = await fetch(`${API_URL}/relatorio`);
+                const d = await r.json();
+                const p = {
+                    dataServico: document.getElementById('data-servico').value.split('-').reverse().join('/'),
+                    cmtGuarda: document.getElementById('cmt-guarda').value,
+                    dadosJson: JSON.stringify({ cargaFaxina: document.getElementById('carga-faxina').value, cargaArmamento: document.getElementById('carga-armamento').value, cargaChaves: document.getElementById('carga-chaves').value, cargaObs: document.getElementById('carga-obs').value, sentinelas: d.sentinelas, alteracoes: d.alteracoes, visitantes: d.visitantes, rondas: d.rondas })
                 };
-                await fetch(`${API_URL}/historico`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                await fetch(`${API_URL}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(p) });
                 await fetch(`${API_URL}/nova-guarda`, { method: 'DELETE' });
                 location.reload(); 
             }
         }
 
-        function exportarPDF() {
-            // Usa o motor de impressão nativo do navegador para o PDF perfeito
-            document.title = "Parte_da_Guarda_" + document.getElementById('data-relatorio').innerText.replace(/\//g, '-');
-            window.print();
-            document.title = "Livro da Guarda Digital - TG 02-009"; // Restaura o título
-        }
-
+        function exportarPDF() { window.print(); }
         function fecharRelatorio() { document.getElementById('painel-relatorio').classList.add('hidden'); }
-
-        window.onload = () => { 
-            updateClock(); 
-            setarHoraAtual(); 
-            setarDataAtual(); 
-            atualizarListasVivas(); 
-            carregarHistoricos(); 
-            carregarCargoUsuario(); 
-        };
+        window.onload = () => { updateClock(); setarHoraAtual(); setarDataAtual(); atualizarListasVivas(); carregarHistoricos(); carregarCargoUsuario(); };
     </script>
 </body>
 </html>
