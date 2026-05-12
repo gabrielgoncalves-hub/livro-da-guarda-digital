@@ -1,0 +1,23 @@
+# Compilados do Maven
+target/
+*.jar
+*.war
+*.ear
+
+# Arquivos da IDE (VS Code / IntelliJ / Eclipse)
+.settings/
+.project
+.classpath
+.factorypath
+.idea/
+*.iml
+.vscode/
+
+# Banco de Dados Local (H2 ou logs)
+*.mv.db
+*.trace.db
+help_data/
+
+# Sistema Operacional
+.DS_Store
+Thumbs.db

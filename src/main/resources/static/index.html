@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livro da Guarda Digital - TG</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #eef2f3; color: #333; margin: 0; padding: 20px; }
+        .header { text-align: center; background-color: #1b4f26; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; }
+        
+        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .painel-largo { grid-column: span 2; } 
+        
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card h3 { margin-top: 0; color: #1b4f26; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
+        label { font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        
+        button { background-color: #27ae60; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; }
+        button:hover { background-color: #1e8449; }
+        .btn-danger { background-color: #c0392b; margin-top: 10px; }
+        .btn-danger:hover { background-color: #962d22; }
+        .btn-pdf { background-color: #8e44ad; margin-top: 20px; }
+        .btn-pdf:hover { background-color: #732d91; }
+        .btn-info { background-color: #2980b9; width: auto; padding: 5px 10px; font-size: 12px; }
+        .btn-info:hover { background-color: #1c5981; }
+        
+        .btn-remover-item { background-color: #e74c3c; width: auto; padding: 4px 10px; margin-left: 10px; font-size: 12px; }
+        .btn-remover-item:hover { background-color: #c0392b; }
+
+        .lista-viva { list-style-type: none; padding: 0; margin-top: 20px; max-height: 200px; overflow-y: auto; }
+        .lista-viva li { padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+
+        .select-trabalho { padding: 5px; font-size: 13px; border-color: #1b4f26; background-color: #e8f5e9; font-weight: bold; border-radius: 4px;}
+
+        .relatorio-container { grid-column: span 2; display: none; }
+        #conteudo-para-pdf { padding: 20px; background: white; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #1b4f26; color: white; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: white; }
+        .PRESENTE { background-color: #27ae60; }
+        .ATRASADO { background-color: #f39c12; }
+        .FALTA { background-color: #c0392b; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Livro da Guarda Digital</h1>
+        <p>Painel do Comandante da Guarda / Monitor</p>
+        <button onclick="fazerLogout()" style="position: absolute; top: 20px; right: 20px; width: auto; background-color: #c0392b; padding: 8px 12px;">Sair do Sistema</button>
+    </div>
+
+    <div class="dashboard">
+        <!-- PAINEL 1: CADASTRAR SENTINELA -->
+        <div class="card">
+            <h3>1. Apresentação da Tropa</h3>
+            <form id="form-sentinela">
+                <div class="form-group">
+                    <label>Número do Atirador:</label>
+                    <input type="number" id="num-at" required placeholder="Ex: 10">
+                </div>
+                <div class="form-group">
+                    <label>Nome de Guerra:</label>
+                    <input type="text" id="nome-at" required placeholder="Ex: Silva">
+                </div>
+                <div class="form-group">
+                    <label>Status na Formatura:</label>
+                    <select id="status-at">
+                        <option value="PRESENTE">Presente</option>
+                        <option value="ATRASADO">Atrasado</option>
+                        <option value="FALTA">Falta</option>
+                    </select>
+                </div>
+                <button type="submit">Registrar Atirador</button>
+            </form>
+            <ul class="lista-viva" id="lista-sentinelas-viva"></ul>
+        </div>
+
+        <!-- PAINEL 2: REGISTRAR ALTERAÇÕES -->
+        <div class="card">
+            <h3>2. Livro de Alterações</h3>
+            <form id="form-alteracao">
+                <div class="form-group">
+                    <label>Horário da Ocorrência:</label>
+                    <input type="time" id="hora-alteracao" required>
+                </div>
+                <div class="form-group">
+                    <label>Descrição da Ocorrência/Ronda:</label>
+                    <textarea id="desc-alteracao" rows="4" required placeholder="Ex: Ronda realizada no fundo do quartel sem alterações."></textarea>
+                </div>
+                <button type="submit">Gravar no Livro</button>
+            </form>
+            <ul class="lista-viva" id="lista-alteracoes-viva"></ul>
+        </div>
+
+        <!-- PAINEL 3: QUADRO DE TRABALHO -->
+        <div class="card painel-largo">
+            <h3>3. Quadro de Trabalho (Em Tempo Real)</h3>
+            <p style="font-size: 13px; color: #555;">Controle a posição atual de cada atirador escalado na guarda.</p>
+            <ul class="lista-viva" id="lista-trabalho-viva" style="max-height: none; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            </ul>
+        </div>
+
+        <!-- PAINEL 4: CARGA E FECHAMENTO -->
+        <div class="card painel-largo">
+            <h3>4. Passagem de Carga e Fechamento</h3>
+            <p style="font-size: 13px; color: #555;">Preencha a conferência do material antes de gerar a Parte da Guarda.</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background-color: #f4f6f7; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #ddd;">
+                <div>
+                    <div class="form-group">
+                        <label>Rádios HT e Baterias:</label>
+                        <select id="carga-radios">
+                            <option value="S/A (Sem alterações)">S/A (Sem alterações)</option>
+                            <option value="Com alterações (Ver obs)">Com alterações (Ver obs)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Armamento e Munição:</label>
+                        <select id="carga-armamento">
+                            <option value="S/A (Sem alterações)">S/A (Sem alterações)</option>
+                            <option value="Com alterações (Ver obs)">Com alterações (Ver obs)</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <div class="form-group">
+                        <label>Chaves e Instalações:</label>
+                        <select id="carga-chaves">
+                            <option value="S/A (Sem alterações)">S/A (Sem alterações)</option>
+                            <option value="Com alterações (Ver obs)">Com alterações (Ver obs)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Observação de Carga (Opcional):</label>
+                        <input type="text" id="carga-obs" placeholder="Ex: Rádio 2 com bateria viciada.">
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                <div class="form-group" style="width: 200px; margin-bottom: 0;">
+                    <label>Data do Serviço:</label>
+                    <input type="date" id="data-servico" required>
+                </div>
+                <div class="form-group" style="width: 250px; margin-bottom: 0;">
+                    <label>Cmt da Guarda (Nº e Nome):</label>
+                    <input type="text" id="cmt-guarda" placeholder="Ex: Mon 10 Silva" required>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 20px;">
+                <button onclick="gerarRelatorioAtual()" style="background-color: #2980b9;">Gerar Parte da Guarda (Apenas Visualizar)</button>
+                <button onclick="encerrarESalvarGuarda()" class="btn-danger">Encerrar Serviço e Salvar no Histórico</button>
+            </div>
+        </div>
+
+        <!-- PAINEL 5: HISTÓRICO -->
+        <div class="card painel-largo">
+            <h3>5. Arquivo / Histórico de Serviços</h3>
+            <table style="margin-top: 0;">
+                <thead><tr><th>Data do Serviço</th><th>Comandante da Guarda</th><th>Ação</th></tr></thead>
+                <tbody id="corpo-historico">
+                    <!-- O JavaScript vai injetar os históricos antigos aqui -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- RELATÓRIO FINAL -->
+        <div class="card relatorio-container" id="painel-relatorio">
+            <div id="conteudo-para-pdf">
+                <h2 style="text-align: center; color: #1b4f26;" id="titulo-relatorio">PARTE DA GUARDA - RELATÓRIO FINAL</h2>
+                <p><strong>Unidade:</strong> TG 02-009 - Bragança Paulista/SP</p>
+                <p><strong>Data do Serviço:</strong> <span id="data-relatorio"></span></p>
+                <p><strong>Comandante da Guarda:</strong> <span id="relatorio-cmt"></span></p>
+                <hr>
+                
+                <h3>Passagem de Carga e Material</h3>
+                <table style="margin-bottom: 20px;">
+                    <tbody>
+                        <tr><td style="width: 30%;"><strong>Rádios HT:</strong></td><td id="pdf-radios"></td></tr>
+                        <tr><td><strong>Armamento/Munição:</strong></td><td id="pdf-armamento"></td></tr>
+                        <tr><td><strong>Chaves/Instalações:</strong></td><td id="pdf-chaves"></td></tr>
+                        <tr><td><strong>Observações:</strong></td><td id="pdf-obs"></td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Efetivo da Guarda</h3>
+                <table id="tabela-efetivo">
+                    <thead><tr><th>Nº</th><th>Nome de Guerra</th><th>Situação</th><th>Status Final/Atividade</th></tr></thead>
+                    <tbody id="corpo-efetivo"></tbody>
+                </table>
+
+                <h3>Registro de Ocorrências</h3>
+                <table id="tabela-alteracoes">
+                    <thead><tr><th>Horário</th><th>Descrição</th></tr></thead>
+                    <tbody id="corpo-alteracoes"></tbody>
+                </table>
+
+                <div style="margin-top: 80px; text-align: center; page-break-inside: avoid;">
+                    <p>___________________________________________________</p>
+                    <p style="font-weight: bold;" id="assinatura-cmt">NOME DO CMT DA GUARDA</p>
+                    <p style="font-size: 14px; color: #555;">Comandante da Guarda</p>
+                </div>
+            </div>
+            <br>
+            
+            <!-- NOVO: Botões de exportar e fechar alinhados -->
+            <div style="display: flex; gap: 20px;">
+                <button onclick="fecharRelatorio()" style="background-color: #7f8c8d; width: 30%;">✖ Fechar Visualização</button>
+                <button onclick="exportarPDF()" class="btn-pdf" style="margin-top: 0; width: 70%;">Baixar Documento em PDF Oficial</button>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/livro-guarda';
+        let historicoCompleto = [];
+
+        async function fazerLogout() {
+            if(confirm("Deseja realmente sair e bloquear o sistema?")) {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.reload(); 
+            }
+        }
+
+        function setarHoraAtual() {
+            const agora = new Date();
+            const horas = String(agora.getHours()).padStart(2, '0');
+            const minutos = String(agora.getMinutes()).padStart(2, '0');
+            document.getElementById('hora-alteracao').value = `${horas}:${minutos}`;
+        }
+
+        function formatarDataInput(dataString) {
+            const partes = dataString.split('-'); 
+            return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : 'Data não informada';
+        }
+
+        function setarDataAtual() {
+            const hoje = new Date();
+            const ano = hoje.getFullYear();
+            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+            const dia = String(hoje.getDate()).padStart(2, '0');
+            document.getElementById('data-servico').value = `${ano}-${mes}-${dia}`;
+        }
+
+        async function atualizarListasVivas() {
+            try {
+                const resposta = await fetch(`${API_URL}/relatorio`);
+                if(!resposta.ok) return;
+                const relatorio = await resposta.json();
+                
+                const listaSent = document.getElementById('lista-sentinelas-viva');
+                const listaTrabalho = document.getElementById('lista-trabalho-viva');
+                listaSent.innerHTML = ''; 
+                listaTrabalho.innerHTML = ''; 
+
+                relatorio.sentinelas.forEach(at => {
+                    listaSent.innerHTML += `
+                        <li>
+                            <span><strong>At ${at.numero} ${at.nomeGuerra}</strong> <span class="status-badge ${at.status}">${at.status}</span></span>
+                            <button class="btn-remover-item" onclick="removerSentinela(${at.id})" title="Remover Atirador">X</button>
+                        </li>
+                    `;
+
+                    if(at.status !== 'FALTA') {
+                        const checkSelecionado = (opcao) => at.atividadeAtual === opcao ? 'selected' : '';
+                        listaTrabalho.innerHTML += `
+                            <li style="background-color: #f9f9f9; border-radius: 6px; padding: 10px;">
+                                <strong>At ${at.numero} ${at.nomeGuerra}</strong>
+                                <select class="select-trabalho" onchange="alterarAtividade(${at.id}, this.value)">
+                                    <option value="Prontidão" ${checkSelecionado('Prontidão')}>Prontidão</option>
+                                    <option value="Posto 1 (Portão)" ${checkSelecionado('Posto 1 (Portão)')}>Posto 1 (Portão)</option>
+                                    <option value="Posto 2 (Fundos)" ${checkSelecionado('Posto 2 (Fundos)')}>Posto 2 (Fundos)</option>
+                                    <option value="Ronda" ${checkSelecionado('Ronda')}>Ronda</option>
+                                    <option value="Dormindo/Descanso" ${checkSelecionado('Dormindo/Descanso')}>Dormindo/Descanso</option>
+                                </select>
+                            </li>
+                        `;
+                    }
+                });
+
+                const listaAlt = document.getElementById('lista-alteracoes-viva');
+                listaAlt.innerHTML = ''; 
+                relatorio.alteracoes.forEach(alt => {
+                    listaAlt.innerHTML += `
+                        <li>
+                            <span style="flex-grow: 1;"><strong>[${alt.horario}]</strong> ${alt.descricao}</span>
+                            <button class="btn-remover-item" onclick="removerAlteracao(${alt.id})" title="Remover Alteração">X</button>
+                        </li>
+                    `;
+                });
+            } catch (erro) { console.error("Erro na API."); }
+        }
+
+        async function carregarHistoricos() {
+            const corpoHist = document.getElementById('corpo-historico');
+            try {
+                const resposta = await fetch(`${API_URL}/historico`);
+                if(!resposta.ok) throw new Error("Erro na busca");
+                
+                historicoCompleto = await resposta.json();
+                corpoHist.innerHTML = '';
+                
+                if(!Array.isArray(historicoCompleto) || historicoCompleto.length === 0) {
+                    corpoHist.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhum serviço salvo no arquivo.</td></tr>';
+                    return;
+                }
+
+                historicoCompleto.forEach((hist, index) => {
+                    corpoHist.innerHTML += `
+                        <tr>
+                            <td><strong>${hist.dataServico}</strong></td>
+                            <td>${hist.cmtGuarda}</td>
+                            <td><button class="btn-info" onclick="visualizarHistorico(${index})">Ver PDF</button></td>
+                        </tr>
+                    `;
+                });
+            } catch (erro) { 
+                console.error("Erro ao carregar histórico:", erro); 
+                corpoHist.innerHTML = '<tr><td colspan="3" style="text-align:center; color: red;">Erro ao conectar com o banco de dados.</td></tr>';
+            }
+        }
+
+        async function alterarAtividade(id, novaAtividade) {
+            try { await fetch(`${API_URL}/sentinela/${id}/atividade`, { method: 'PUT', headers: { 'Content-Type': 'text/plain' }, body: novaAtividade }); } catch(erro) {}
+        }
+
+        async function removerSentinela(id) {
+            if(confirm("Remover este atirador da formatura?")) { await fetch(`${API_URL}/sentinela/${id}`, { method: 'DELETE' }); atualizarListasVivas(); }
+        }
+
+        async function removerAlteracao(id) {
+            if(confirm("Remover esta alteração do livro?")) { await fetch(`${API_URL}/alteracao/${id}`, { method: 'DELETE' }); atualizarListasVivas(); }
+        }
+
+        document.getElementById('form-sentinela').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const sentinela = { numero: document.getElementById('num-at').value, nomeGuerra: document.getElementById('nome-at').value, status: document.getElementById('status-at').value };
+            await fetch(`${API_URL}/sentinela`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sentinela) });
+            document.getElementById('form-sentinela').reset(); document.getElementById('num-at').focus(); atualizarListasVivas();
+        });
+
+        document.getElementById('form-alteracao').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const alteracao = { horario: document.getElementById('hora-alteracao').value, descricao: document.getElementById('desc-alteracao').value };
+            await fetch(`${API_URL}/alteracao`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(alteracao) });
+            document.getElementById('form-alteracao').reset(); setarHoraAtual(); atualizarListasVivas(); 
+        });
+
+        function desenharRelatorio(titulo, data, cmt, radios, armamento, chaves, obs, sentinelas, alteracoes) {
+            document.getElementById('titulo-relatorio').innerText = titulo;
+            document.getElementById('data-relatorio').innerText = data;
+            document.getElementById('relatorio-cmt').innerText = cmt;
+            document.getElementById('assinatura-cmt').innerText = cmt.toUpperCase();
+
+            document.getElementById('pdf-radios').innerText = radios;
+            document.getElementById('pdf-armamento').innerText = armamento;
+            document.getElementById('pdf-chaves').innerText = chaves;
+            document.getElementById('pdf-obs').innerText = obs ? obs : "Nenhuma observação registrada.";
+
+            const corpoEfetivo = document.getElementById('corpo-efetivo');
+            corpoEfetivo.innerHTML = '';
+            sentinelas.forEach(at => {
+                corpoEfetivo.innerHTML += `<tr><td>${at.numero}</td><td>${at.nomeGuerra}</td><td><span class="status-badge ${at.status}">${at.status}</span></td><td>${at.status === 'FALTA' ? 'N/A' : at.atividadeAtual}</td></tr>`;
+            });
+
+            const corpoAlt = document.getElementById('corpo-alteracoes');
+            corpoAlt.innerHTML = '';
+            if (alteracoes.length === 0) {
+                corpoAlt.innerHTML = `<tr><td colspan="2" style="text-align: center;">Serviço transcorreu sem alterações.</td></tr>`;
+            } else {
+                alteracoes.forEach(alt => {
+                    corpoAlt.innerHTML += `<tr><td><strong>${alt.horario}</strong></td><td>${alt.descricao}</td></tr>`;
+                });
+            }
+
+            document.getElementById('painel-relatorio').style.display = 'block';
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        async function gerarRelatorioAtual() {
+            const resposta = await fetch(`${API_URL}/relatorio`);
+            const relatorio = await resposta.json();
+            const dataFormatada = formatarDataInput(document.getElementById('data-servico').value);
+            let nomeCmt = document.getElementById('cmt-guarda').value || "NÃO INFORMADO";
+            desenharRelatorio("PARTE DA GUARDA - RELATÓRIO DO SERVIÇO", dataFormatada, nomeCmt, document.getElementById('carga-radios').value, document.getElementById('carga-armamento').value, document.getElementById('carga-chaves').value, document.getElementById('carga-obs').value, relatorio.sentinelas, relatorio.alteracoes);
+        }
+
+        function visualizarHistorico(index) {
+            const hist = historicoCompleto[index];
+            const dados = JSON.parse(hist.dadosJson); 
+            desenharRelatorio("CÓPIA DE ARQUIVO - PARTE DA GUARDA", hist.dataServico, hist.cmtGuarda, dados.cargaRadios, dados.cargaArmamento, dados.cargaChaves, dados.cargaObs, dados.sentinelas, dados.alteracoes);
+        }
+
+        async function encerrarESalvarGuarda() {
+            let nomeCmt = document.getElementById('cmt-guarda').value;
+            if(!nomeCmt) { alert("Preencha o Cmt da Guarda!"); return; }
+
+            if(confirm("ATENÇÃO: O serviço será salvo no histórico e a tela será limpa. Deseja encerrar a guarda?")) {
+                
+                const resposta = await fetch(`${API_URL}/relatorio`);
+                const relatorio = await resposta.json();
+
+                const payload = {
+                    dataServico: formatarDataInput(document.getElementById('data-servico').value),
+                    cmtGuarda: nomeCmt,
+                    dadosJson: JSON.stringify({
+                        cargaRadios: document.getElementById('carga-radios').value,
+                        cargaArmamento: document.getElementById('carga-armamento').value,
+                        cargaChaves: document.getElementById('carga-chaves').value,
+                        cargaObs: document.getElementById('carga-obs').value,
+                        sentinelas: relatorio.sentinelas,
+                        alteracoes: relatorio.alteracoes
+                    })
+                };
+
+                const resPost = await fetch(`${API_URL}/historico`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                
+                if (!resPost.ok) {
+                    alert("ERRO CRÍTICO NO BANCO DE DADOS: O histórico não foi salvo. Por segurança, o sistema não apagou o serviço atual.");
+                    return; 
+                }
+
+                await fetch(`${API_URL}/nova-guarda`, { method: 'DELETE' });
+                
+                document.getElementById('painel-relatorio').style.display = 'none';
+                document.getElementById('carga-radios').value = "S/A (Sem alterações)";
+                document.getElementById('carga-armamento').value = "S/A (Sem alterações)";
+                document.getElementById('carga-chaves').value = "S/A (Sem alterações)";
+                document.getElementById('carga-obs').value = "";
+                document.getElementById('cmt-guarda').value = "";
+                
+                atualizarListasVivas(); 
+                carregarHistoricos(); 
+                alert("Serviço encerrado e salvo com sucesso no arquivo!");
+            }
+        }
+
+        function exportarPDF() {
+            const elementoParaImprimir = document.getElementById('conteudo-para-pdf');
+            elementoParaImprimir.style.width = '800px';
+            elementoParaImprimir.style.maxWidth = '800px';
+            elementoParaImprimir.style.padding = '20px';
+            
+            const opcoes = { margin: 10, filename: 'Parte_da_Guarda.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, scrollY: 0 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+
+            html2pdf().set(opcoes).from(elementoParaImprimir).save().then(() => {
+                elementoParaImprimir.style.width = 'auto';
+                elementoParaImprimir.style.maxWidth = 'none';
+                elementoParaImprimir.style.padding = '0';
+            });
+        }
+
+        // NOVA FUNÇÃO: Esconde o relatório e rola a tela para cima
+        function fecharRelatorio() {
+            document.getElementById('painel-relatorio').style.display = 'none';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.onload = () => {
+            setarHoraAtual();
+            setarDataAtual();
+            atualizarListasVivas();
+            carregarHistoricos();
+        };
+    </script>
+</body>
+</html>
