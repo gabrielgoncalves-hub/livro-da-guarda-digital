@@ -5,17 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Livro da Guarda Digital - TG 02-009</title>
     
-    <!-- Tailwind CSS & Fonts -->
+    <!-- Tailwind CSS & Fonts (SEM BIBLIOTECA DE PDF DE TERCEIROS) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #334155; }
+        
+        /* Scrollbar suave e limpa */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* --- CSS MÁGICO PARA O PDF NATIVO --- */
+        @media print {
+            /* Esconde toda a interface do sistema (painéis, inputs, botões) */
+            body * { visibility: hidden; }
+            
+            /* Restaura a visibilidade APENAS do conteúdo do relatório */
+            #conteudo-para-pdf, #conteudo-para-pdf * { visibility: visible; }
+            
+            /* Tira o modal do modo 'fixo' para permitir múltiplas páginas e joga pro topo */
+            #painel-relatorio {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: auto;
+                overflow: visible !important;
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+
+            #conteudo-para-pdf { 
+                position: relative;
+                left: 0; 
+                top: 0; 
+                width: 100%; 
+            }
+
+            /* Esconde os botões de "Fechar Janela" e "Baixar PDF" na folha impressa */
+            .botoes-impressao { display: none !important; }
+
+            /* Evita que as linhas da tabela sejam cortadas ao meio na quebra de página */
+            tr { break-inside: avoid; }
+            
+            /* Margem oficial de documento */
+            @page { margin: 15mm; }
+        }
     </style>
 </head>
 <body class="p-4 lg:p-8 min-h-screen">
@@ -171,7 +212,7 @@
         </section>
     </div>
 
-    <!-- MODAL DO RELATÓRIO (PDF) -->
+    <!-- MODAL DO RELATÓRIO (PDF NATIVO) -->
     <div id="painel-relatorio" class="fixed inset-0 bg-slate-900/80 z-50 hidden p-4 overflow-y-auto backdrop-blur-sm">
         <div class="max-w-4xl mx-auto bg-white text-black p-8 rounded-xl shadow-2xl mt-10 border border-slate-200">
             <div id="conteudo-para-pdf">
@@ -206,15 +247,15 @@
                         <tbody id="corpo-alteracoes"></tbody>
                     </table>
                 </div>
-                <div class="mt-20 text-center text-sm">
+                <div class="mt-20 text-center text-sm" style="page-break-inside: avoid;">
                     <p class="border-t border-black w-1/2 mx-auto pt-2 font-bold" id="assinatura-cmt"></p>
                     <p>Comandante da Guarda</p>
                 </div>
             </div>
             
-            <div class="flex gap-4 mt-10">
+            <div class="flex gap-4 mt-10 botoes-impressao">
                 <button onclick="fecharRelatorio()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800 p-4 rounded-lg font-bold uppercase text-xs transition-colors border border-slate-300">Fechar Janela</button>
-                <button onclick="exportarPDF()" class="flex-1 bg-[#2d5a27] hover:bg-[#1b3d1a] text-white p-4 rounded-lg font-bold uppercase text-xs shadow-md transition-colors">Baixar PDF Oficial</button>
+                <button onclick="exportarPDF()" class="flex-1 bg-[#2d5a27] hover:bg-[#1b3d1a] text-white p-4 rounded-lg font-bold uppercase text-xs shadow-md transition-colors">Imprimir / Salvar PDF Oficial</button>
             </div>
         </div>
     </div>
@@ -443,35 +484,10 @@
         }
 
         function exportarPDF() {
-            const elementoOriginal = document.getElementById('conteudo-para-pdf');
-            const clone = elementoOriginal.cloneNode(true);
-            document.body.appendChild(clone);
-            
-            clone.style.cssText = `
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 800px;
-                padding: 30px;
-                background-color: #ffffff;
-                color: #000000;
-                z-index: -9999;
-            `;
-            
-            let dataServico = document.getElementById('data-relatorio').innerText.replace(/\//g, '-');
-            
-            const opcoes = { 
-                margin: 10, 
-                filename: `Parte_da_Guarda_TG02009_${dataServico}.pdf`, 
-                image: { type: 'jpeg', quality: 1.0 }, 
-                html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true, scrollX: 0, scrollY: 0 }, 
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } 
-            };
-
-            html2pdf().set(opcoes).from(clone).save().then(() => {
-                document.body.removeChild(clone);
-            });
+            // Usa o motor de impressão nativo do navegador para o PDF perfeito
+            document.title = "Parte_da_Guarda_" + document.getElementById('data-relatorio').innerText.replace(/\//g, '-');
+            window.print();
+            document.title = "Livro da Guarda Digital - TG 02-009"; // Restaura o título
         }
 
         function fecharRelatorio() { document.getElementById('painel-relatorio').classList.add('hidden'); }
