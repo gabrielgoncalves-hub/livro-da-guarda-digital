@@ -12,7 +12,6 @@
 
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #334155; }
-        /* Scrollbar suave e limpa */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -30,7 +29,7 @@
         <div class="flex items-center gap-6">
             <div class="text-right hidden md:block">
                 <p id="clock" class="text-lg font-mono font-bold text-[#2d5a27]"></p>
-                <p class="text-[10px] text-slate-400 font-bold uppercase">Painel do Monitor</p>
+                <p id="label-painel" class="text-[10px] text-slate-400 font-bold uppercase transition-colors">Carregando...</p>
             </div>
             <button onclick="fazerLogout()" class="px-5 py-2.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-600 hover:text-white transition-all rounded-lg text-xs font-bold uppercase shadow-sm">
                 Sair do Sistema
@@ -172,10 +171,9 @@
         </section>
     </div>
 
-    <!-- MODAL DO RELATÓRIO (MANTIDO O MESMO CÓDIGO) -->
+    <!-- MODAL DO RELATÓRIO (PDF) -->
     <div id="painel-relatorio" class="fixed inset-0 bg-slate-900/80 z-50 hidden p-4 overflow-y-auto backdrop-blur-sm">
         <div class="max-w-4xl mx-auto bg-white text-black p-8 rounded-xl shadow-2xl mt-10 border border-slate-200">
-            <!-- (Conteúdo do PDF mantido igual para não quebrar a exportação) -->
             <div id="conteudo-para-pdf">
                 <div class="text-center border-b-2 border-black pb-4 mb-6">
                     <h2 class="text-2xl font-bold uppercase" id="titulo-relatorio">PARTE DA GUARDA</h2>
@@ -239,6 +237,22 @@
         function setarDataAtual() {
             const h = new Date();
             document.getElementById('data-servico').value = `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}-${String(h.getDate()).padStart(2, '0')}`;
+        }
+
+        async function carregarCargoUsuario() {
+            try {
+                const resposta = await fetch(`${API_URL}/me`);
+                if (resposta.ok) {
+                    const painel = await resposta.text();
+                    const label = document.getElementById('label-painel');
+                    label.innerText = painel;
+                    if(painel === "PAINEL DO SUBTENENTE") {
+                        label.classList.replace('text-slate-400', 'text-purple-600');
+                    }
+                }
+            } catch (erro) {
+                document.getElementById('label-painel').innerText = "PAINEL OFF-LINE";
+            }
         }
 
         async function atualizarListasVivas() {
@@ -430,12 +444,9 @@
 
         function exportarPDF() {
             const elementoOriginal = document.getElementById('conteudo-para-pdf');
-            
-            // 1. Cria um clone exato do relatório para não quebrar a tela do usuário
             const clone = elementoOriginal.cloneNode(true);
             document.body.appendChild(clone);
             
-            // 2. Força o clone a ficar no canto superior esquerdo (0,0) com largura fixa de A4
             clone.style.cssText = `
                 position: absolute;
                 top: 0;
@@ -444,28 +455,20 @@
                 padding: 30px;
                 background-color: #ffffff;
                 color: #000000;
-                z-index: -9999; /* Esconde atrás de tudo */
+                z-index: -9999;
             `;
             
-            // Pega a data para o nome do arquivo
             let dataServico = document.getElementById('data-relatorio').innerText.replace(/\//g, '-');
             
             const opcoes = { 
                 margin: 10, 
                 filename: `Parte_da_Guarda_TG02009_${dataServico}.pdf`, 
                 image: { type: 'jpeg', quality: 1.0 }, 
-                html2canvas: { 
-                    scale: 2, 
-                    backgroundColor: '#ffffff', 
-                    useCORS: true, 
-                    scrollX: 0, 
-                    scrollY: 0 
-                }, 
+                html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true, scrollX: 0, scrollY: 0 }, 
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } 
             };
 
-            // 3. Gera o PDF usando o Clone perfeito e depois destrói ele
             html2pdf().set(opcoes).from(clone).save().then(() => {
                 document.body.removeChild(clone);
             });
@@ -473,7 +476,14 @@
 
         function fecharRelatorio() { document.getElementById('painel-relatorio').classList.add('hidden'); }
 
-        window.onload = () => { updateClock(); setarHoraAtual(); setarDataAtual(); atualizarListasVivas(); carregarHistoricos(); };
+        window.onload = () => { 
+            updateClock(); 
+            setarHoraAtual(); 
+            setarDataAtual(); 
+            atualizarListasVivas(); 
+            carregarHistoricos(); 
+            carregarCargoUsuario(); 
+        };
     </script>
 </body>
 </html>

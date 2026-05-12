@@ -22,7 +22,7 @@ import java.util.List;
 public class SistemaGuardaApplication {
     public static void main(String[] args) {
         SpringApplication.run(SistemaGuardaApplication.class, args);
-        System.out.println("\n === SISTEMA CONECTADO E BLINDADO (TABELAS CORRIGIDAS) === \n");
+        System.out.println("\n === SISTEMA DO TG 02-009 CONECTADO E BLINDADO === \n");
     }
 }
 
@@ -77,7 +77,6 @@ class RegistroHistorico {
     private String dataServico;
     private String cmtGuarda;
     
-    // CORREÇÃO AQUI: Padrão infalível para suportar até 5 milhões de caracteres
     @Column(length = 5000000) 
     private String dadosJson; 
 
@@ -194,6 +193,13 @@ class LivroGuardaController {
         guardaService.removerHistorico(id);
         return "Registro de histórico removido!";
     }
+
+    @GetMapping("/me")
+    public String getUsuarioAtual(org.springframework.security.core.Authentication auth) {
+        boolean isSubtenente = auth.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_SUBTENENTE"));
+        return isSubtenente ? "PAINEL DO SUBTENENTE" : "PAINEL DO MONITOR";
+    }
 }
 
 // --- 5. CONFIGURAÇÃO DE SEGURANÇA ---
@@ -201,7 +207,6 @@ class LivroGuardaController {
 @EnableWebSecurity
 class SecurityConfig {
 
-    // NOVO: O Java vai procurar essa variável no servidor (ou no application.properties)
     @org.springframework.beans.factory.annotation.Value("${SENHA_SISTEMA:tg02009}")
     private String senhaSistema;
 
@@ -213,7 +218,6 @@ class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                // Restringe a exclusão de histórico apenas para o cargo de Subtenente
                 .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/livro-guarda/historico/**").hasRole("SUBTENENTE")
                 .anyRequest().authenticated()
             )
@@ -232,13 +236,13 @@ class SecurityConfig {
         UserDetails monitor = User.withDefaultPasswordEncoder()
             .username("monitor")
             .password(senhaSistema)
-            .roles("MONITOR") // Papel padrão para operações do dia a dia
+            .roles("MONITOR") 
             .build();
 
         UserDetails subtenente = User.withDefaultPasswordEncoder()
             .username("subtenente")
             .password(senhaSubtenente)
-            .roles("SUBTENENTE") // Único com permissão para deletar histórico
+            .roles("SUBTENENTE") 
             .build();
 
         return new InMemoryUserDetailsManager(monitor, subtenente);
