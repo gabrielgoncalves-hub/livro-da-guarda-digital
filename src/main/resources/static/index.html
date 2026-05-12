@@ -37,7 +37,7 @@
         </div>
     </header>
 
-    <!-- DASHBOARD ANALÍTICO (INVISÍVEL PARA MONITORES) -->
+    <!-- DASHBOARD ANALÍTICO (VISÃO GERENCIAL - SUBTENENTE) -->
     <section id="painel-dashboard" class="mb-8 bg-indigo-900 p-6 rounded-xl border border-indigo-700 shadow-lg hidden">
         <h3 class="text-white font-bold mb-6 uppercase text-sm border-b border-indigo-700 pb-3 flex items-center gap-2">
             <span class="w-2 h-2 bg-indigo-400 rounded-full animate-pulse"></span>
@@ -63,6 +63,7 @@
         </div>
     </section>
 
+    <!-- AVISOS DO COMANDO -->
     <div class="aviso-interno mb-6 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg shadow-sm">
         <h4 class="text-yellow-800 font-bold text-sm uppercase mb-1">🚨 Ordens do S Ten Alexandre</h4>
         <ul class="text-xs text-yellow-700 space-y-1 list-disc ml-4">
@@ -71,7 +72,8 @@
         </ul>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- PAINEL OPERACIONAL (EXCLUSIVO PARA O MONITOR) -->
+    <div id="painel-operacional" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         
         <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
             <h3 class="text-[#1b3d1a] font-bold flex items-center gap-2 mb-6 uppercase text-sm border-b pb-3">1. Apresentação da Tropa</h3>
@@ -157,17 +159,18 @@
                 <button onclick="encerrarESalvarGuarda()" class="bg-red-600 text-white font-bold py-4 rounded-lg text-xs uppercase shadow-md">Encerrar Serviço</button>
             </div>
         </section>
+    </div> <!-- FIM DO PAINEL OPERACIONAL -->
 
-        <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm lg:col-span-3">
-            <h3 class="text-[#1b3d1a] font-bold mb-6 uppercase text-sm border-b pb-3">7. Arquivo / Histórico de Serviços</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left bg-white">
-                    <thead class="bg-slate-50"><tr class="text-[11px] uppercase border-b"><th class="p-4">Data</th><th class="p-4">Comandante da Guarda</th><th class="p-4 text-right">Ações (Restritas)</th></tr></thead>
-                    <tbody id="corpo-historico" class="divide-y"></tbody>
-                </table>
-            </div>
-        </section>
-    </div>
+    <!-- 7. HISTÓRICO (VISÍVEL PARA AMBOS, MAS COM RESTRIÇÕES DE BOTÃO) -->
+    <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8">
+        <h3 class="text-[#1b3d1a] font-bold mb-6 uppercase text-sm border-b pb-3">Arquivo / Histórico de Serviços</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left bg-white">
+                <thead class="bg-slate-50"><tr class="text-[11px] uppercase border-b"><th class="p-4">Data</th><th class="p-4">Comandante da Guarda</th><th class="p-4 text-right">Ações</th></tr></thead>
+                <tbody id="corpo-historico" class="divide-y"></tbody>
+            </table>
+        </div>
+    </section>
 
     <!-- MODAL RELATÓRIO (PDF NATIVO) -->
     <div id="painel-relatorio" class="fixed inset-0 bg-slate-900/80 z-50 hidden p-4 overflow-y-auto">
@@ -220,9 +223,19 @@
                     if(p.includes("SUBTENENTE")) {
                         document.getElementById('label-painel').classList.replace('text-slate-400', 'text-purple-600');
                         isSubtenente = true;
+                        
+                        // LÓGICA DE UX AQUI: Mostra o Dashboard, esconde os inputs operacionais
                         document.getElementById('painel-dashboard').classList.remove('hidden');
-                        carregarEstatisticas(); // CARREGA OS DADOS DO DASHBOARD
-                    } else { isSubtenente = false; }
+                        document.getElementById('painel-operacional').classList.add('hidden');
+                        
+                        carregarEstatisticas();
+                    } else { 
+                        isSubtenente = false; 
+                        
+                        // Garante que o Monitor vê os inputs e não vê o Dashboard
+                        document.getElementById('painel-dashboard').classList.add('hidden');
+                        document.getElementById('painel-operacional').classList.remove('hidden');
+                    }
                 }
             } catch (erro) { document.getElementById('label-painel').innerText = "OFF-LINE"; }
         }
