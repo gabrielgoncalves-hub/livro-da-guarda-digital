@@ -170,12 +170,6 @@ class LivroGuardaController {
         this.guardaService = guardaService;
     }
 
-    @DeleteMapping("/historico/{id}")
-    public String removerHistorico(@PathVariable Long id) {
-        guardaService.removerHistorico(id);
-        return "Registro de histórico removido!";
-    }
-
     @PostMapping("/sentinela")
     public String adicionarSentinela(@RequestBody Sentinela sentinela) { guardaService.registrarSentinela(sentinela); return "Atirador registrado!"; }
     @DeleteMapping("/sentinela/{id}")
@@ -194,6 +188,12 @@ class LivroGuardaController {
     public String salvarHistorico(@RequestBody RegistroHistorico historico) { guardaService.salvarHistorico(historico); return "Histórico salvo!"; }
     @GetMapping("/historico")
     public List<RegistroHistorico> listarHistoricos() { return guardaService.listarHistoricos(); }
+
+    @DeleteMapping("/historico/{id}")
+    public String removerHistorico(@PathVariable Long id) {
+        guardaService.removerHistorico(id);
+        return "Registro de histórico removido!";
+    }
 }
 
 // --- 5. CONFIGURAÇÃO DE SEGURANÇA ---

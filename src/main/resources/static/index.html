@@ -372,6 +372,19 @@
             } catch (erro) { 
                 corpoHist.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-red-500 bg-red-900/20 border border-red-500 rounded text-xs">Erro ao conectar com o banco de dados PostgreSQL.</td></tr>';
             }
+
+            // Dentro do carregarHistoricos
+            historicoCompleto.forEach((hist, index) => {
+                // Verifique se você está usando hist.id (ID do banco) e não o index do array
+                corpoHist.innerHTML += `
+                    <tr>
+                        ...
+                        <td>
+                            <button onclick="excluirHistorico(${hist.id})">Apagar</button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
 
         async function alterarAtividade(id, novaAtividade) {
@@ -479,8 +492,37 @@
 
         function exportarPDF() {
             const elementoParaImprimir = document.getElementById('conteudo-para-pdf');
-            const opcoes = { margin: 10, filename: 'Parte_da_Guarda.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
-            html2pdf().set(opcoes).from(elementoParaImprimir).save();
+            
+            // 1. Salva o estilo original
+            const estiloOriginal = elementoParaImprimir.style.cssText;
+            
+            // 2. Força o visual perfeito para folha A4 (Fundo branco, texto preto, largura fixa)
+            elementoParaImprimir.style.backgroundColor = '#ffffff';
+            elementoParaImprimir.style.color = '#000000';
+            elementoParaImprimir.style.width = '800px'; 
+            elementoParaImprimir.style.maxWidth = '800px'; 
+            elementoParaImprimir.style.padding = '30px';
+            
+            // Pega a data para o nome do arquivo (Mimo de UX)
+            let dataServico = document.getElementById('data-relatorio').innerText.replace(/\//g, '-');
+            let nomeArquivo = `Parte_da_Guarda_TG02009_${dataServico}.pdf`;
+
+            const opcoes = { 
+                margin: [15, 10, 15, 10], // Margens [Cima, Direita, Baixo, Esquerda]
+                filename: nomeArquivo, 
+                image: { type: 'jpeg', quality: 1.0 }, 
+                html2canvas: { 
+                    scale: 2, 
+                    backgroundColor: '#ffffff', // Trava o fundo branco no canvas
+                    useCORS: true 
+                }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+            };
+
+            // Gera o PDF e depois devolve o layout ao normal
+            html2pdf().set(opcoes).from(elementoParaImprimir).save().then(() => {
+                elementoParaImprimir.style.cssText = estiloOriginal;
+            });
         }
 
         function fecharRelatorio() {
