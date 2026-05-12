@@ -1,6 +1,11 @@
 FROM maven:3.8.5-openjdk-17 AS build
 WORKDIR /app
-COPY . .
+# Copia o pom.xml primeiro para baixar as dependências (cache)
+COPY pom.xml .
+RUN mvn dependency:go-offline
+
+# Agora copia o código e compila
+COPY src ./src
 RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:17-jdk-alpine
