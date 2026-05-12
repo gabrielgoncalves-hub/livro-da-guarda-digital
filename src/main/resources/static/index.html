@@ -94,7 +94,7 @@
             <ul id="lista-visitantes-viva" class="mt-6 space-y-3 max-h-48 overflow-y-auto"></ul>
         </section>
 
-        <!-- 4. CONTROLE DE RONDAS (NOVO) -->
+        <!-- 4. CONTROLE DE RONDAS -->
         <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
             <h3 class="text-[#1b3d1a] font-bold mb-6 uppercase text-sm border-b pb-3 text-orange-600">4. Checklist de Rondas</h3>
             <form id="form-ronda" class="space-y-4">
@@ -142,7 +142,18 @@
         <!-- 7. HISTÓRICO -->
         <section class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm lg:col-span-3">
             <h3 class="text-[#1b3d1a] font-bold mb-6 uppercase text-sm border-b pb-3">7. Arquivo / Histórico de Serviços</h3>
-            <div class="overflow-x-auto"><table class="w-full text-left bg-white"><thead class="bg-slate-50"><tr class="text-[11px] uppercase border-b"><th class="p-4">Data</th><th class="p-4">Cmt da Guarda</th><th class="p-4 text-right">Ações</th></tr></thead><tbody id="corpo-historico" class="divide-y"></tbody></table></div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left bg-white">
+                    <thead class="bg-slate-50">
+                        <tr class="text-[11px] uppercase border-b">
+                            <th class="p-4">Data</th>
+                            <th class="p-4">Comandante da Guarda</th>
+                            <th class="p-4 text-right">Ações (Restritas)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-historico" class="divide-y"></tbody>
+                </table>
+            </div>
         </section>
     </div>
 
@@ -161,7 +172,6 @@
                 <div class="mb-8 text-sm"><h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">3. Controle de Portaria (Visitantes e Veículos)</h4>
                     <table class="w-full border border-black text-[10px]"><thead class="bg-slate-100"><tr class="border-b"><th class="p-2 border-r">Nome do Visitante</th><th class="p-2 border-r w-24">RG</th><th class="p-2 border-r w-20">Placa</th><th class="p-2 border-r">Motivo</th><th class="p-2 w-16">E/S</th></tr></thead><tbody id="corpo-visitantes-pdf"></tbody></table>
                 </div>
-                <!-- NOVO: TABELA DE RONDAS NO PDF -->
                 <div class="mb-8 text-sm"><h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">4. Checklist de Rondas</h4>
                     <table class="w-full border border-black text-[10px]"><thead class="bg-slate-100"><tr class="border-b"><th class="p-2 border-r w-24">Hora Prevista</th><th class="p-2 border-r w-24">Hora Realizada</th><th class="p-2 border-r">Responsável</th><th class="p-2 w-20">Status</th></tr></thead><tbody id="corpo-rondas-pdf"></tbody></table>
                 </div>
@@ -180,6 +190,7 @@
     <script>
         const API_URL = '/api/livro-guarda';
         let historicoCompleto = [];
+        let isSubtenente = false; // VARIÁVEL DE CONTROLE DE PERMISSÃO
 
         function updateClock() { document.getElementById('clock').innerText = new Date().toLocaleTimeString('pt-BR'); }
         setInterval(updateClock, 1000);
@@ -190,11 +201,20 @@
         function setarDataAtual() { const h = new Date(); document.getElementById('data-servico').value = `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}-${String(h.getDate()).padStart(2, '0')}`; }
 
         async function carregarCargoUsuario() {
-            const resp = await fetch(`${API_URL}/me`);
-            if (resp.ok) {
-                const p = await resp.text();
-                document.getElementById('label-painel').innerText = p;
-                if(p.includes("SUBTENENTE")) document.getElementById('label-painel').classList.replace('text-slate-400', 'text-purple-600');
+            try {
+                const resp = await fetch(`${API_URL}/me`);
+                if (resp.ok) {
+                    const p = await resp.text();
+                    document.getElementById('label-painel').innerText = p;
+                    if(p.includes("SUBTENENTE")) {
+                        document.getElementById('label-painel').classList.replace('text-slate-400', 'text-purple-600');
+                        isSubtenente = true; // ATIVA OS PRIVILÉGIOS NO FRONTEND
+                    } else {
+                        isSubtenente = false;
+                    }
+                }
+            } catch (erro) {
+                document.getElementById('label-painel').innerText = "PAINEL OFF-LINE";
             }
         }
 
@@ -236,9 +256,35 @@
         async function carregarHistoricos() {
             const resp = await fetch(`${API_URL}/historico`);
             historicoCompleto = await resp.json();
-            const c = document.getElementById('corpo-historico'); c.innerHTML = '';
-            if(!historicoCompleto.length) { c.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-slate-400">VAZIO</td></tr>'; return; }
-            historicoCompleto.forEach((h, i) => { c.innerHTML += `<tr class="hover:bg-slate-50"><td class="p-4 text-sm font-bold">${h.dataServico}</td><td class="p-4 text-sm uppercase">${h.cmtGuarda}</td><td class="p-4 text-right flex justify-end gap-2"><button onclick="visualizarHistorico(${i})" class="px-4 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold">PDF</button><button onclick="excluirHistorico(${h.id})" class="px-4 py-1.5 bg-red-50 text-red-600 rounded-lg text-[10px] font-bold">DELETAR</button></td></tr>`; });
+            const c = document.getElementById('corpo-historico'); 
+            c.innerHTML = '';
+            
+            if(!historicoCompleto.length) { 
+                c.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-slate-400">NENHUM SERVIÇO ARQUIVADO.</td></tr>'; 
+                return; 
+            }
+            
+            historicoCompleto.forEach((h, i) => { 
+                // A LÓGICA DE CONDITIONAL RENDERING ESTÁ AQUI
+                let acoesHTML = '';
+                
+                if (isSubtenente) {
+                    acoesHTML = `
+                        <button onclick="visualizarHistorico(${i})" class="px-4 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold">ABRIR PDF</button>
+                        <button onclick="excluirHistorico(${h.id})" class="px-4 py-1.5 bg-red-50 text-red-600 rounded-lg text-[10px] font-bold">DELETAR</button>
+                    `;
+                } else {
+                    acoesHTML = `<span class="text-[10px] text-slate-400 font-bold bg-slate-100 px-3 py-1 rounded">🔒 RESTRITO</span>`;
+                }
+
+                c.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-4 text-sm font-bold">${h.dataServico}</td>
+                        <td class="p-4 text-sm uppercase">${h.cmtGuarda}</td>
+                        <td class="p-4 text-right flex justify-end gap-2">${acoesHTML}</td>
+                    </tr>
+                `; 
+            });
         }
 
         async function registrarSaidaVisitante(id) {
@@ -350,7 +396,20 @@
 
         function exportarPDF() { window.print(); }
         function fecharRelatorio() { document.getElementById('painel-relatorio').classList.add('hidden'); }
-        window.onload = () => { updateClock(); setarHoraAtual(); setarDataAtual(); atualizarListasVivas(); carregarHistoricos(); carregarCargoUsuario(); };
+        
+        // NOVO FLUXO DE CARREGAMENTO PARA GARANTIR A LEITURA DA PERMISSÃO PRIMEIRO
+        window.onload = async () => { 
+            updateClock(); 
+            setarHoraAtual(); 
+            setarDataAtual(); 
+            atualizarListasVivas(); 
+            
+            // 1. Descobre se é monitor ou subtenente
+            await carregarCargoUsuario(); 
+            
+            // 2. Renderiza o histórico com os botões certos ou com a tag 🔒 RESTRITO
+            carregarHistoricos(); 
+        };
     </script>
 </body>
 </html>
