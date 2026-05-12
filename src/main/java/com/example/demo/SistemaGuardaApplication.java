@@ -154,6 +154,10 @@ class GuardaService {
 
     public void salvarHistorico(RegistroHistorico historico) { historicoRepo.save(historico); }
     public List<RegistroHistorico> listarHistoricos() { return historicoRepo.findAll(); }
+
+    public void removerHistorico(Long id) {
+        historicoRepo.deleteById(id);
+    }
 }
 
 // --- 4. CONTROLLER ---
@@ -164,6 +168,12 @@ class LivroGuardaController {
 
     public LivroGuardaController(GuardaService guardaService) {
         this.guardaService = guardaService;
+    }
+
+    @DeleteMapping("/historico/{id}")
+    public String removerHistorico(@PathVariable Long id) {
+        guardaService.removerHistorico(id);
+        return "Registro de histórico removido!";
     }
 
     @PostMapping("/sentinela")
@@ -195,11 +205,18 @@ class SecurityConfig {
     @org.springframework.beans.factory.annotation.Value("${SENHA_SISTEMA:tg02009}")
     private String senhaSistema;
 
+    @org.springframework.beans.factory.annotation.Value("${SENHA_SUB:sub02009}")
+    private String senhaSubtenente;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+            .authorizeHttpRequests(auth -> auth
+                // Restringe a exclusão de histórico apenas para o cargo de Subtenente
+                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/livro-guarda/historico/**").hasRole("SUBTENENTE")
+                .anyRequest().authenticated()
+            )
             .formLogin(form -> form.permitAll())
             .logout(logout -> logout
                 .logoutUrl("/api/logout") 
@@ -212,11 +229,18 @@ class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        UserDetails comandante = User.withDefaultPasswordEncoder()
+        UserDetails monitor = User.withDefaultPasswordEncoder()
             .username("monitor")
-            .password(senhaSistema) // NOVO: Usa a variável injetada
-            .roles("ADMIN")
+            .password(senhaSistema)
+            .roles("MONITOR") // Papel padrão para operações do dia a dia
             .build();
-        return new InMemoryUserDetailsManager(comandante);
+
+        UserDetails subtenente = User.withDefaultPasswordEncoder()
+            .username("subtenente")
+            .password(senhaSubtenente)
+            .roles("SUBTENENTE") // Único com permissão para deletar histórico
+            .build();
+
+        return new InMemoryUserDetailsManager(monitor, subtenente);
     }
 }
