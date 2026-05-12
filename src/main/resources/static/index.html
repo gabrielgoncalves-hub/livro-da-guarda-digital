@@ -429,18 +429,46 @@
         }
 
         function exportarPDF() {
-            const el = document.getElementById('conteudo-para-pdf');
-            const original = el.style.cssText;
-            el.style.backgroundColor = '#ffffff'; el.style.color = '#000000'; el.style.padding = '20px';
-            let data = document.getElementById('data-relatorio').innerText.replace(/\//g, '-');
+            const elementoOriginal = document.getElementById('conteudo-para-pdf');
             
-            html2pdf().set({ 
-                margin: 10, filename: `Parte_da_Guarda_TG02009_${data}.pdf`, 
+            // 1. Cria um clone exato do relatório para não quebrar a tela do usuário
+            const clone = elementoOriginal.cloneNode(true);
+            document.body.appendChild(clone);
+            
+            // 2. Força o clone a ficar no canto superior esquerdo (0,0) com largura fixa de A4
+            clone.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 800px;
+                padding: 30px;
+                background-color: #ffffff;
+                color: #000000;
+                z-index: -9999; /* Esconde atrás de tudo */
+            `;
+            
+            // Pega a data para o nome do arquivo
+            let dataServico = document.getElementById('data-relatorio').innerText.replace(/\//g, '-');
+            
+            const opcoes = { 
+                margin: 10, 
+                filename: `Parte_da_Guarda_TG02009_${dataServico}.pdf`, 
                 image: { type: 'jpeg', quality: 1.0 }, 
-                html2canvas: { scale: 2, backgroundColor: '#ffffff', useCORS: true, scrollY: 0, windowWidth: 850 }, 
+                html2canvas: { 
+                    scale: 2, 
+                    backgroundColor: '#ffffff', 
+                    useCORS: true, 
+                    scrollX: 0, 
+                    scrollY: 0 
+                }, 
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } 
-            }).from(el).save().then(() => { el.style.cssText = original; });
+            };
+
+            // 3. Gera o PDF usando o Clone perfeito e depois destrói ele
+            html2pdf().set(opcoes).from(clone).save().then(() => {
+                document.body.removeChild(clone);
+            });
         }
 
         function fecharRelatorio() { document.getElementById('painel-relatorio').classList.add('hidden'); }
