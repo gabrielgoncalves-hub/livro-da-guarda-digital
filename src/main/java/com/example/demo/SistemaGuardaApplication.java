@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Map;
 import java.util.HashMap;
@@ -31,7 +32,7 @@ import java.util.HashMap;
 public class SistemaGuardaApplication {
     public static void main(String[] args) {
         SpringApplication.run(SistemaGuardaApplication.class, args);
-        System.out.println("\n === SISTEMA TG 02-009: CYBER SECURITY & ANALYTICS ATIVADOS === \n");
+        System.out.println("\n === SISTEMA TG 02-009: FILTROS DINÂMICOS ATIVADOS === \n");
     }
 }
 
@@ -89,12 +90,9 @@ enum StatusApresentacao { PRESENTE, ATRASADO, FALTA }
     public String getDadosJson() { return dadosJson; } public void setDadosJson(String dadosJson) { this.dadosJson = dadosJson; }
 }
 
-// --- 2. ENTIDADES DE SEGURANÇA E AUDITORIA (NOVO) ---
 @Entity class Usuario {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
-    @Column(unique = true) private String username; 
-    private String password; 
-    private String role;
+    @Column(unique = true) private String username; private String password; private String role;
     public Usuario() {}
     public String getUsername() { return username; } public void setUsername(String username) { this.username = username; }
     public String getPassword() { return password; } public void setPassword(String password) { this.password = password; }
@@ -105,10 +103,8 @@ enum StatusApresentacao { PRESENTE, ATRASADO, FALTA }
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     private String dataHora; private String ipOrigem; private String usuarioAcao; private String descricaoAcao;
     public LogAuditoria() {}
-    public void setDataHora(String dataHora) { this.dataHora = dataHora; }
-    public void setIpOrigem(String ipOrigem) { this.ipOrigem = ipOrigem; }
-    public void setUsuarioAcao(String usuarioAcao) { this.usuarioAcao = usuarioAcao; }
-    public void setDescricaoAcao(String descricaoAcao) { this.descricaoAcao = descricaoAcao; }
+    public void setDataHora(String dataHora) { this.dataHora = dataHora; } public void setIpOrigem(String ipOrigem) { this.ipOrigem = ipOrigem; }
+    public void setUsuarioAcao(String usuarioAcao) { this.usuarioAcao = usuarioAcao; } public void setDescricaoAcao(String descricaoAcao) { this.descricaoAcao = descricaoAcao; }
 }
 
 // --- 3. DTOs ---
@@ -122,6 +118,7 @@ class RelatorioFinal {
 class EstatisticasDTO {
     public int totalServicos = 0; public int totalVisitantes = 0; public int totalRondasPendentes = 0;
     public Map<String, Integer> statusTropa = new HashMap<>();
+    public List<Map<String, Object>> rankingDisciplina = new ArrayList<>();
 }
 
 // --- 4. REPOSITÓRIOS ---
@@ -133,7 +130,7 @@ interface RegistroHistoricoRepository extends JpaRepository<RegistroHistorico, L
 interface UsuarioRepository extends JpaRepository<Usuario, Long> { Optional<Usuario> findByUsername(String username); }
 interface LogAuditoriaRepository extends JpaRepository<LogAuditoria, Long> {}
 
-// --- 5. INITIALIZER (POPULA BANCO COM SENHAS BCRYPT) ---
+// --- 5. INITIALIZER ---
 @Component class DataInitializer implements org.springframework.boot.CommandLineRunner {
     private final UsuarioRepository usuarioRepo; private final PasswordEncoder encoder;
     public DataInitializer(UsuarioRepository u, PasswordEncoder e) { this.usuarioRepo = u; this.encoder = e; }
@@ -155,41 +152,43 @@ interface LogAuditoriaRepository extends JpaRepository<LogAuditoria, Long> {}
         this.sentinelaRepo = s; this.alteracaoRepo = a; this.visitanteRepo = v; this.rondaRepo = r; this.historicoRepo = h; this.logRepo = l;
     }
 
-    public void registrarSentinela(Sentinela s) { sentinelaRepo.save(s); }
-    public void removerSentinela(Long id) { sentinelaRepo.deleteById(id); }
-    public void registrarAlteracao(Alteracao a) { alteracaoRepo.save(a); }
-    public void removerAlteracao(Long id) { alteracaoRepo.deleteById(id); }
+    public void registrarSentinela(Sentinela s) { sentinelaRepo.save(s); } public void removerSentinela(Long id) { sentinelaRepo.deleteById(id); }
+    public void registrarAlteracao(Alteracao a) { alteracaoRepo.save(a); } public void removerAlteracao(Long id) { alteracaoRepo.deleteById(id); }
     public void atualizarAtividade(Long id, String n) { Sentinela s = sentinelaRepo.findById(id).orElse(null); if(s != null) { s.setAtividadeAtual(n); sentinelaRepo.save(s); } }
-    public void registrarVisitante(Visitante v) { visitanteRepo.save(v); }
+    public void registrarVisitante(Visitante v) { visitanteRepo.save(v); } public void removerVisitante(Long id) { visitanteRepo.deleteById(id); }
     public void registrarSaidaVisitante(Long id, String h) { Visitante v = visitanteRepo.findById(id).orElse(null); if(v != null) { v.setHoraSaida(h); visitanteRepo.save(v); } }
-    public void removerVisitante(Long id) { visitanteRepo.deleteById(id); }
-    public void registrarRonda(Ronda r) { rondaRepo.save(r); }
+    public void registrarRonda(Ronda r) { rondaRepo.save(r); } public void removerRonda(Long id) { rondaRepo.deleteById(id); }
     public void realizarRonda(Long id, String resp, String hora) { Ronda r = rondaRepo.findById(id).orElse(null); if(r != null) { r.setResponsavel(resp); r.setHorarioRealizado(hora); r.setConcluida(true); rondaRepo.save(r); } }
-    public void removerRonda(Long id) { rondaRepo.deleteById(id); }
 
     public RelatorioFinal gerarParteDaGuarda() { return new RelatorioFinal(sentinelaRepo.findAll(), alteracaoRepo.findAll(), visitanteRepo.findAll(), rondaRepo.findAll()); }
     public void iniciarNovaGuarda() { sentinelaRepo.deleteAll(); alteracaoRepo.deleteAll(); visitanteRepo.deleteAll(); rondaRepo.deleteAll(); }
     public void salvarHistorico(RegistroHistorico h) { historicoRepo.save(h); }
     public List<RegistroHistorico> listarHistoricos() { return historicoRepo.findAll(); }
 
-    // MÓDULO DE AUDITORIA: Registra IP na hora da exclusão
     public void removerHistoricoAuditado(Long id, String ip, String user) {
         LogAuditoria log = new LogAuditoria();
         log.setDataHora(new java.util.Date().toString()); log.setIpOrigem(ip); log.setUsuarioAcao(user); log.setDescricaoAcao("Exclusão Permanente do Registro ID: " + id);
-        logRepo.save(log);
-        historicoRepo.deleteById(id);
+        logRepo.save(log); historicoRepo.deleteById(id);
     }
 
-    // MÓDULO DE ANALYTICS: Processa JSON em memória
-    public EstatisticasDTO compilarEstatisticas() {
+    // O MOTOR AGORA RECEBE UM FILTRO DE DATA
+    public EstatisticasDTO compilarEstatisticas(String filtroData) {
         EstatisticasDTO dto = new EstatisticasDTO();
         List<RegistroHistorico> hist = historicoRepo.findAll();
+        
+        // APLICA O FILTRO DE DATA (SE O FRONTEND MANDAR ALGO DIFERENTE DE "TODOS")
+        if (filtroData != null && !filtroData.isEmpty() && !filtroData.equals("TODOS")) {
+            hist = hist.stream().filter(h -> h.getDataServico().equals(filtroData)).toList();
+        }
+
         dto.totalServicos = hist.size();
         ObjectMapper mapper = new ObjectMapper();
-        
+        Map<String, Integer> mapaInfracoes = new HashMap<>();
+
         for(RegistroHistorico h : hist) {
             try {
                 JsonNode root = mapper.readTree(h.getDadosJson());
+                
                 JsonNode vis = root.get("visitantes");
                 if(vis != null && vis.isArray()) dto.totalVisitantes += vis.size();
                 
@@ -203,10 +202,28 @@ interface LogAuditoriaRepository extends JpaRepository<LogAuditoria, Long> {}
                     for(JsonNode s : sen) {
                         String st = s.has("status") ? s.get("status").asText() : "PRESENTE";
                         dto.statusTropa.put(st, dto.statusTropa.getOrDefault(st, 0) + 1);
+                        
+                        if(st.equals("FALTA") || st.equals("ATRASADO")) {
+                            String num = s.has("numero") ? s.get("numero").asText() : "";
+                            String nome = s.has("nomeGuerra") ? s.get("nomeGuerra").asText() : "";
+                            String chaveIdentidade = "At " + num + " " + nome;
+                            mapaInfracoes.put(chaveIdentidade, mapaInfracoes.getOrDefault(chaveIdentidade, 0) + 1);
+                        }
                     }
                 }
             } catch(Exception e) {}
         }
+        
+        List<Map.Entry<String, Integer>> listaOrdenada = new ArrayList<>(mapaInfracoes.entrySet());
+        listaOrdenada.sort((a, b) -> b.getValue().compareTo(a.getValue()));
+        
+        for(Map.Entry<String, Integer> entry : listaOrdenada) {
+            Map<String, Object> r = new HashMap<>();
+            r.put("nome", entry.getKey());
+            r.put("ocorrencias", entry.getValue());
+            dto.rankingDisciplina.add(r);
+        }
+
         return dto;
     }
 }
@@ -233,20 +250,22 @@ class LivroGuardaController {
     @PostMapping("/historico") public String saveH(@RequestBody RegistroHistorico h) { svc.salvarHistorico(h); return "OK"; }
     @GetMapping("/historico") public List<RegistroHistorico> listH() { return svc.listarHistoricos(); }
     
-    // ENDPOINT AUDITADO
     @DeleteMapping("/historico/{id}") public String delH(@PathVariable Long id, HttpServletRequest req, org.springframework.security.core.Authentication auth) { 
         svc.removerHistoricoAuditado(id, req.getRemoteAddr(), auth.getName()); return "OK"; 
     }
 
-    // ENDPOINT ANALYTICS
-    @GetMapping("/estatisticas") public EstatisticasDTO getEst() { return svc.compilarEstatisticas(); }
+    // O ENDPOINT AGORA ACEITA O PARÂMETRO DA DATA VIA URL
+    @GetMapping("/estatisticas") 
+    public EstatisticasDTO getEst(@RequestParam(required = false) String data) { 
+        return svc.compilarEstatisticas(data); 
+    }
 
     @GetMapping("/me") public String getU(org.springframework.security.core.Authentication auth) {
         return auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_SUBTENENTE")) ? "PAINEL DO SUBTENENTE" : "PAINEL DO MONITOR";
     }
 }
 
-// --- 8. CONFIGURAÇÃO DE SEGURANÇA (BCRYPT + DB) ---
+// --- 8. CONFIGURAÇÃO DE SEGURANÇA ---
 @Configuration @EnableWebSecurity
 class SecurityConfig {
     @Bean public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
@@ -254,12 +273,13 @@ class SecurityConfig {
     @Bean public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(c -> c.disable())
             .authorizeHttpRequests(a -> a
+                .requestMatchers("/login.html").permitAll() 
                 .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/livro-guarda/historico/**").hasRole("SUBTENENTE")
                 .requestMatchers("/api/livro-guarda/estatisticas").hasRole("SUBTENENTE")
                 .anyRequest().authenticated()
             )
-            .formLogin(f -> f.permitAll())
-            .logout(l -> l.logoutUrl("/api/logout").invalidateHttpSession(true).deleteCookies("JSESSIONID").logoutSuccessUrl("/login?logout"));
+            .formLogin(f -> f.loginPage("/login.html").loginProcessingUrl("/login").defaultSuccessUrl("/", true).permitAll())
+            .logout(l -> l.logoutUrl("/api/logout").invalidateHttpSession(true).deleteCookies("JSESSIONID").logoutSuccessUrl("/login.html?logout"));
         return http.build();
     }
 }
