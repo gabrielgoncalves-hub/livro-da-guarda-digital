@@ -13,13 +13,29 @@
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        /* === CONFIGURAÇÕES OFICIAIS DE IMPRESSÃO (A4) === */
         @media print {
+            body { background-color: white !important; }
             body * { visibility: hidden; }
-            #conteudo-para-pdf, #conteudo-para-pdf * { visibility: visible; }
-            #painel-relatorio { position: absolute; left: 0; top: 0; width: 100%; height: auto; background: white; padding: 0; border: none; }
+            
+            /* Mostra apenas a folha do PDF */
+            #painel-relatorio { position: absolute; left: 0; top: 0; width: 100%; background: white !important; }
+            #painel-relatorio, #painel-relatorio * { visibility: visible; }
+            
+            /* Esconde botões e sombras na impressão */
             .botoes-impressao, .aviso-interno { display: none !important; }
-            tr { break-inside: avoid; }
-            @page { margin: 15mm; }
+            #conteudo-para-pdf { box-shadow: none !important; margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: none !important; }
+            
+            /* Força a impressão das cores de fundo (cinza das tabelas) */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            
+            /* Previne que a tabela quebre no meio de uma linha mudando de página */
+            tr, td, th { page-break-inside: avoid; }
+            h4 { page-break-after: avoid; }
+            
+            /* Margens padrão A4 */
+            @page { size: A4; margin: 20mm 15mm; }
         }
     </style>
 </head>
@@ -44,20 +60,14 @@
         </div>
     </header>
 
-    <!-- DASHBOARD ANALÍTICO -->
     <section id="painel-dashboard" class="mb-8 bg-[#1b3d1a] p-6 rounded-2xl border border-[#2d5a27] shadow-xl hidden">
-        
-        <!-- CABEÇALHO DO DASHBOARD COM CALENDÁRIO -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-[#2d5a27] pb-4 gap-4">
             <h3 class="text-white font-bold uppercase text-sm flex items-center gap-2 tracking-wider">
                 <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
                 Inteligência e Estatísticas (Comando)
             </h3>
-            
             <div class="flex items-center gap-3">
-                <button id="btn-limpar-filtro" onclick="limparFiltro()" class="hidden text-[10px] text-rose-400 hover:text-rose-300 uppercase font-bold tracking-wider transition-colors bg-[#2d5a27]/30 px-3 py-1.5 rounded-lg border border-rose-400/30">
-                    Voltar para Geral
-                </button>
+                <button id="btn-limpar-filtro" onclick="limparFiltro()" class="hidden text-[10px] text-rose-400 hover:text-rose-300 uppercase font-bold tracking-wider transition-colors bg-[#2d5a27]/30 px-3 py-1.5 rounded-lg border border-rose-400/30">Voltar para Geral</button>
                 <div class="relative">
                     <input type="date" id="filtro-data" onchange="aplicarFiltroData()" class="bg-[#1b3d1a] text-emerald-400 border border-[#3b7333] rounded-lg px-4 py-2 text-xs font-bold outline-none cursor-pointer shadow-inner tracking-wider uppercase transition-all focus:ring-2 focus:ring-emerald-400/30" style="color-scheme: dark;">
                 </div>
@@ -83,9 +93,9 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="bg-[#2d5a27] p-4 rounded-xl border border-[#3b7333] shadow-inner flex flex-col items-center">
-                <h4 id="titulo-grafico" class="text-[10px] text-emerald-100 font-bold uppercase mb-4 w-full text-center tracking-wider">Desempenho de Apresentação (Histórico Geral)</h4>
+                <h4 id="titulo-grafico" class="text-[10px] text-emerald-100 font-bold uppercase mb-4 w-full text-center tracking-wider">Desempenho de Apresentação</h4>
                 <div class="relative h-48 w-full flex justify-center">
                     <canvas id="chartTropa"></canvas>
                 </div>
@@ -93,21 +103,51 @@
             
             <div class="bg-[#2d5a27] p-4 rounded-xl border border-[#3b7333] shadow-inner flex flex-col items-center justify-start h-full">
                 <h4 class="text-[10px] text-emerald-100 font-bold uppercase mb-4 w-full text-center tracking-wider border-b border-[#3b7333] pb-3">Alerta Disciplinar (Ranking de Faltas)</h4>
+                <div id="lista-ranking" class="w-full flex-1 overflow-y-auto max-h-32 pr-2 space-y-2 mb-4">
+                    <p class="text-xs text-emerald-50 text-center font-medium italic mt-4">Processando...</p>
+                </div>
+                <button onclick="gerarEscalaPunitiva()" class="w-full bg-amber-500 hover:bg-amber-600 text-[#1b3d1a] font-black py-2 rounded-lg transition-all uppercase text-[10px] tracking-widest shadow-lg shadow-amber-500/20">
+                    Sugerir Escala Punitiva
+                </button>
+            </div>
+
+            <div class="bg-[#2d5a27] p-4 rounded-xl border border-[#3b7333] shadow-inner flex flex-col items-center justify-start h-full relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-12 h-12 bg-rose-500/10 rounded-bl-full border-b border-l border-rose-500/30 flex items-center justify-center">
+                    <span class="w-2 h-2 bg-rose-500 rounded-full animate-ping"></span>
+                </div>
+                <h4 class="text-[10px] text-emerald-100 font-bold uppercase mb-4 w-full text-center tracking-wider border-b border-[#3b7333] pb-3">Radar Segurança (IDS Blue Team)</h4>
                 
-                <div id="lista-ranking" class="w-full flex-1 overflow-y-auto max-h-40 pr-2 space-y-2">
-                    <p class="text-xs text-emerald-50 text-center font-medium italic mt-4">Processando banco de dados...</p>
+                <div class="w-full flex flex-col gap-3 mt-2">
+                    <div class="bg-[#1b3d1a] p-3 rounded-lg border border-[#3b7333]">
+                        <p class="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Tentativas Bloqueadas (Login)</p>
+                        <p class="text-2xl font-black text-rose-400" id="ids-falhas">0</p>
+                    </div>
+                    <div class="bg-[#1b3d1a] p-3 rounded-lg border border-[#3b7333]">
+                        <p class="text-[9px] text-slate-400 uppercase tracking-widest font-bold">IPs Neutralizados na Rede</p>
+                        <p class="text-2xl font-black text-amber-400" id="ids-ips">0</p>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- PAINEL OPERACIONAL -->
+    <div id="modal-escala" class="fixed inset-0 bg-slate-900/90 z-50 hidden p-4 overflow-y-auto backdrop-blur-sm flex items-center justify-center">
+        <div class="max-w-md w-full bg-white p-8 rounded-2xl shadow-2xl border-t-8 border-amber-500 relative">
+            <h2 class="text-xl font-black uppercase tracking-tight text-[#1b3d1a] border-b pb-4 mb-4">Sugestão de Escala Punitiva</h2>
+            <p class="text-xs text-slate-500 font-medium mb-6">Baseado na inteligência de dados, estes são os atiradores com maior reincidência de infrações indicados para o serviço de final de semana:</p>
+            <ul id="lista-escala-gerada" class="space-y-3 mb-8"></ul>
+            <div class="flex gap-4">
+                <button onclick="fecharModalEscala()" class="w-full bg-slate-200 text-slate-700 hover:bg-slate-300 p-3 rounded-lg font-bold uppercase text-xs transition-colors">Fechar</button>
+            </div>
+        </div>
+    </div>
+
     <div id="painel-operacional">
         
         <div class="aviso-interno mb-8 bg-amber-50 border-l-8 border-amber-500 p-5 rounded-r-xl shadow-md border border-amber-100">
             <h4 class="text-amber-800 font-black text-sm uppercase mb-2 tracking-wider flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                Ordens do S Ten Alexandre
+                Ordens da Instrução (S Ten Alexandre)
             </h4>
             <ul class="text-sm text-amber-800 space-y-1.5 list-disc ml-6 font-medium">
                 <li><strong>Trava de Liberação:</strong> A Permanência (08h-18h) SÓ VAI EMBORA se estiver completa a Guarnição de serviço da noite.</li>
@@ -202,9 +242,8 @@
                 </div>
             </section>
         </div>
-    </div> <!-- FIM DO PAINEL OPERACIONAL -->
+    </div> 
 
-    <!-- 7. HISTÓRICO -->
     <section class="bg-white p-6 rounded-2xl border border-slate-200 shadow-lg mb-8">
         <h3 class="text-[#1b3d1a] font-black mb-6 uppercase text-sm border-b border-slate-100 pb-3 tracking-wider">Arquivo / Histórico de Serviços</h3>
         <div class="overflow-x-auto rounded-xl border border-slate-200">
@@ -215,37 +254,94 @@
         </div>
     </section>
 
-    <!-- MODAL RELATÓRIO (PDF NATIVO) -->
-    <div id="painel-relatorio" class="fixed inset-0 bg-slate-900/80 z-50 hidden p-4 overflow-y-auto backdrop-blur-sm">
-        <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-2xl mt-10">
-            <div id="conteudo-para-pdf">
-                <div class="text-center border-b-2 border-black pb-4 mb-6"><h2 class="text-2xl font-black uppercase tracking-tight">PARTE DA GUARDA</h2><p class="text-sm font-bold uppercase tracking-widest mt-1">TG 02-009 - Bragança Paulista/SP</p></div>
-                <div class="grid grid-cols-2 gap-4 mb-8 text-sm"><p><strong>Data:</strong> <span id="data-relatorio"></span></p><p><strong>Cmt da Guarda:</strong> <span id="relatorio-cmt"></span></p></div>
-                <div class="mb-8 text-sm"><h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">1. Passagem de Carga e Material</h4>
-                    <table class="w-full border border-black text-xs"><tr class="border-b"><td class="p-2 border-r font-bold w-1/3">Faxina/Manutenção:</td><td id="pdf-faxina" class="p-2"></td></tr><tr class="border-b"><td class="p-2 border-r font-bold">Armamento/Munição:</td><td id="pdf-armamento" class="p-2"></td></tr><tr class="border-b"><td class="p-2 border-r font-bold">Chaves/Instalações:</td><td id="pdf-chaves" class="p-2"></td></tr><tr><td class="p-2 border-r font-bold">Observações:</td><td id="pdf-obs" class="p-2"></td></tr></table>
-                </div>
-                <div class="mb-8 text-sm"><h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">2. Efetivo da Guarda</h4>
-                    <table class="w-full border border-black text-[10px]"><thead class="bg-slate-100"><tr class="border-b"><th class="p-2 border-r w-8">Nº</th><th class="p-2 border-r">Nome de Guerra</th><th class="p-2 border-r">Função/Turno</th><th class="p-2 border-r w-16">Status</th><th class="p-2">Posto / Atividade</th></tr></thead><tbody id="corpo-efetivo"></tbody></table>
-                </div>
-                <div class="mb-8 text-sm"><h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">3. Controle de Portaria</h4>
-                    <table class="w-full border border-black text-[10px]"><thead class="bg-slate-100"><tr class="border-b"><th class="p-2 border-r">Nome do Visitante</th><th class="p-2 border-r w-24">RG</th><th class="p-2 border-r w-20">Placa</th><th class="p-2 border-r">Motivo</th><th class="p-2 w-16">E/S</th></tr></thead><tbody id="corpo-visitantes-pdf"></tbody></table>
-                </div>
-                <div class="mb-8 text-sm"><h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">4. Checklist de Rondas</h4>
-                    <table class="w-full border border-black text-[10px]"><thead class="bg-slate-100"><tr class="border-b"><th class="p-2 border-r w-24">Hora Prevista</th><th class="p-2 border-r w-24">Hora Realizada</th><th class="p-2 border-r">Responsável</th><th class="p-2 w-20">Status</th></tr></thead><tbody id="corpo-rondas-pdf"></tbody></table>
-                </div>
-                <div class="mb-8 text-sm"><h4 class="bg-slate-200 p-2 font-bold uppercase mb-2">5. Registro de Ocorrências</h4>
-                    <table class="w-full border border-black text-[10px]"><thead class="bg-slate-100"><tr class="border-b"><th class="p-2 border-r w-20">Horário</th><th class="p-2">Descrição</th></tr></thead><tbody id="corpo-alteracoes"></tbody></table>
-                </div>
-                <div class="mt-20 text-center text-sm"><p class="border-t border-black w-1/2 mx-auto pt-2 font-bold" id="assinatura-cmt"></p><p>Comandante da Guarda</p></div>
+    <div id="painel-relatorio" class="fixed inset-0 bg-slate-900/90 z-50 hidden p-4 overflow-y-auto backdrop-blur-sm">
+        
+        <div class="flex justify-between items-center max-w-[210mm] mx-auto mb-4 botoes-impressao">
+            <button onclick="fecharRelatorio()" class="bg-slate-700 text-white hover:bg-slate-600 px-6 py-3 rounded-lg font-bold uppercase text-xs tracking-widest shadow-lg transition-colors">Voltar</button>
+            <button onclick="exportarPDF()" class="bg-indigo-600 text-white hover:bg-indigo-500 px-6 py-3 rounded-lg font-bold uppercase text-xs tracking-widest shadow-lg transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                Imprimir Documento
+            </button>
+        </div>
+
+        <div id="conteudo-para-pdf" class="bg-white text-black max-w-[210mm] mx-auto p-[20mm] shadow-2xl" style="font-family: 'Times New Roman', Times, serif;">
+            
+            <div class="text-center mb-8 flex flex-col items-center">
+                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBvbHlnb24gcG9pbnRzPSI1MCwxNSA4NSw1MCA1MCw4NSAxNSw1MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJibGFjayIgc3Ryb2tlLXdpZHRoPSIyIi8+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iMjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iYmxhY2siIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPg==" class="w-16 h-16 mb-2" alt="Brasão">
+                <p class="font-bold text-sm uppercase m-0 leading-tight">Ministério da Defesa</p>
+                <p class="font-bold text-sm uppercase m-0 leading-tight">Exército Brasileiro</p>
+                <p class="font-bold text-sm uppercase m-0 leading-tight">Tiro de Guerra 02-009 - Bragança Paulista/SP</p>
+                
+                <h2 class="text-xl font-black uppercase mt-8 tracking-widest border-b-2 border-black pb-1 mb-6">Parte da Guarda</h2>
             </div>
-            <div class="flex gap-4 mt-10 botoes-impressao">
-                <button onclick="fecharRelatorio()" class="flex-1 bg-slate-200 p-4 rounded-lg font-bold uppercase text-xs">Fechar</button>
-                <button onclick="exportarPDF()" class="flex-1 bg-[#2d5a27] text-white p-4 rounded-lg font-bold uppercase text-xs">Imprimir PDF Oficial</button>
+            
+            <div class="flex justify-between border border-black p-3 mb-6 bg-gray-100">
+                <p class="m-0 text-sm"><strong>Data do Serviço:</strong> <span id="data-relatorio"></span></p>
+                <p class="m-0 text-sm"><strong>Cmt da Guarda:</strong> <span id="relatorio-cmt"></span></p>
+            </div>
+
+            <style>
+                .tabela-pdf { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 12px; }
+                .tabela-pdf th, .tabela-pdf td { border: 1px solid black; padding: 6px; text-align: left; }
+                .tabela-pdf th { background-color: #e5e7eb; text-transform: uppercase; font-weight: bold; }
+                .titulo-sessao-pdf { font-size: 13px; font-family: Arial, sans-serif; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; border-bottom: 1px solid black; display: inline-block; padding-bottom: 2px;}
+            </style>
+
+            <div class="mb-6">
+                <h4 class="titulo-sessao-pdf">1. Efetivo da Guarda</h4>
+                <table class="tabela-pdf mt-2">
+                    <thead><tr><th style="width: 5%;">Nº</th><th>Nome de Guerra</th><th style="width: 30%;">Função/Turno</th><th style="width: 15%; text-align: center;">Status</th><th style="width: 20%;">Atividade</th></tr></thead>
+                    <tbody id="corpo-efetivo"></tbody>
+                </table>
+            </div>
+
+            <div class="mb-6">
+                <h4 class="titulo-sessao-pdf">2. Alterações e Ocorrências</h4>
+                <table class="tabela-pdf mt-2">
+                    <thead><tr><th style="width: 15%;">Horário</th><th>Descrição do Fato Observado</th></tr></thead>
+                    <tbody id="corpo-alteracoes"></tbody>
+                </table>
+            </div>
+
+            <div class="mb-6">
+                <h4 class="titulo-sessao-pdf">3. Controle de Acesso (Portaria)</h4>
+                <table class="tabela-pdf mt-2">
+                    <thead><tr><th>Nome do Visitante</th><th style="width: 15%;">RG</th><th style="width: 15%;">Placa</th><th>Motivo</th><th style="width: 15%; text-align: center;">Entrada/Saída</th></tr></thead>
+                    <tbody id="corpo-visitantes-pdf"></tbody>
+                </table>
+            </div>
+
+            <div class="mb-6">
+                <h4 class="titulo-sessao-pdf">4. Relatório de Rondas</h4>
+                <table class="tabela-pdf mt-2">
+                    <thead><tr><th style="width: 20%;">Hora Prevista</th><th style="width: 20%;">Hora Execução</th><th>Responsável pela Execução</th><th style="width: 20%; text-align: center;">Status Final</th></tr></thead>
+                    <tbody id="corpo-rondas-pdf"></tbody>
+                </table>
+            </div>
+
+            <div class="mb-12">
+                <h4 class="titulo-sessao-pdf">5. Situação da Carga e Material</h4>
+                <table class="tabela-pdf mt-2">
+                    <tr><td style="width: 30%; font-weight: bold; background-color: #e5e7eb;">Faxina e Instalações:</td><td id="pdf-faxina"></td></tr>
+                    <tr><td style="font-weight: bold; background-color: #e5e7eb;">Armamento e Munição:</td><td id="pdf-armamento"></td></tr>
+                    <tr><td style="font-weight: bold; background-color: #e5e7eb;">Chaves e Cadeados:</td><td id="pdf-chaves"></td></tr>
+                    <tr><td style="font-weight: bold; background-color: #e5e7eb;">Observações Extras:</td><td id="pdf-obs"></td></tr>
+                </table>
+            </div>
+
+            <div class="mt-20 flex justify-between px-10 text-center text-sm">
+                <div class="w-64">
+                    <p class="border-t border-black pt-2 font-bold mb-0" id="assinatura-cmt"></p>
+                    <p class="m-0 text-xs">Comandante da Guarda</p>
+                </div>
+                <div class="w-64">
+                    <p class="border-t border-black pt-2 font-bold mb-0">S Ten PATRÍCIO</p>
+                    <p class="m-0 text-xs">Chefe de Instrução - TG 02-009</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT DE INTERAÇÃO -->
     <script>
         const API_URL = '/api/livro-guarda';
         let historicoCompleto = [];
@@ -270,6 +366,7 @@
                         isSubtenente = true;
                         document.getElementById('painel-dashboard').classList.remove('hidden');
                         document.getElementById('painel-operacional').classList.add('hidden');
+                        await carregarIdsStatus();
                         carregarEstatisticas();
                     } else { 
                         isSubtenente = false; 
@@ -280,7 +377,37 @@
             } catch (erro) { document.getElementById('label-painel').innerText = "OFF-LINE"; }
         }
 
-        // ---- NOVAS FUNÇÕES PARA O CALENDÁRIO ----
+        async function carregarIdsStatus() {
+            try {
+                const r = await fetch(`${API_URL}/ids-status`);
+                if(r.ok) {
+                    const data = await r.json();
+                    document.getElementById('ids-falhas').innerText = data.totalFalhas;
+                    document.getElementById('ids-ips').innerText = data.ipsBloqueados;
+                }
+            } catch(e){}
+        }
+
+        async function gerarEscalaPunitiva() {
+            try {
+                const r = await fetch(`${API_URL}/escala-punitiva`);
+                if(r.ok) {
+                    const lista = await r.json();
+                    const container = document.getElementById('lista-escala-gerada');
+                    container.innerHTML = '';
+                    if(lista.length === 0) {
+                        container.innerHTML = '<li class="text-sm font-bold text-slate-500 italic border p-4 rounded text-center">Nenhuma infração registrada para gerar escala.</li>';
+                    } else {
+                        lista.forEach(item => {
+                            container.innerHTML += `<li class="bg-slate-50 border border-slate-200 p-3 rounded-lg shadow-sm flex items-start gap-3 border-l-4 border-l-amber-500"><span class="text-amber-500 mt-1">⚠️</span><span class="text-sm font-bold text-slate-700">${item}</span></li>`;
+                        });
+                    }
+                    document.getElementById('modal-escala').classList.remove('hidden');
+                }
+            } catch(e){}
+        }
+        function fecharModalEscala() { document.getElementById('modal-escala').classList.add('hidden'); }
+
         async function aplicarFiltroData() {
             const dataInput = document.getElementById('filtro-data').value;
             if(dataInput) {
@@ -297,12 +424,10 @@
             document.getElementById('btn-limpar-filtro').classList.add('hidden');
             await carregarEstatisticas('TODOS');
         }
-        // -----------------------------------------
 
         async function carregarEstatisticas(filtro = "TODOS") {
             try {
                 const resp = await fetch(`${API_URL}/estatisticas?data=${encodeURIComponent(filtro)}`);
-                
                 if(resp.ok) {
                     const data = await resp.json();
                     document.getElementById('stat-servicos').innerText = data.totalServicos;
@@ -310,10 +435,7 @@
                     document.getElementById('stat-rondas').innerText = data.totalRondasPendentes;
                     let atrasosFaltas = (data.statusTropa['FALTA'] || 0) + (data.statusTropa['ATRASADO'] || 0);
                     document.getElementById('stat-faltas').innerText = atrasosFaltas;
-
-                    document.getElementById('titulo-grafico').innerText = filtro === "TODOS" 
-                        ? "Desempenho de Apresentação (Histórico Geral)" 
-                        : `Desempenho de Apresentação (Dia ${filtro})`;
+                    document.getElementById('titulo-grafico').innerText = filtro === "TODOS" ? "Desempenho de Apresentação (Histórico Geral)" : `Desempenho de Apresentação (Dia ${filtro})`;
 
                     const rankingHtml = document.getElementById('lista-ranking');
                     rankingHtml.innerHTML = ''; 
@@ -322,19 +444,10 @@
                         data.rankingDisciplina.forEach((atirador, index) => {
                             let medalhaCor = index === 0 ? 'text-rose-400' : 'text-amber-400';
                             let pontinhos = index === 0 ? '🔴' : '🟡';
-                            rankingHtml.innerHTML += `
-                                <div class="flex justify-between items-center bg-[#1b3d1a] p-2.5 rounded-lg border border-[#3b7333] shadow-sm">
-                                    <span class="text-xs font-bold text-emerald-50 tracking-wider">${pontinhos} ${atirador.nome}</span>
-                                    <span class="text-xs font-black ${medalhaCor}">${atirador.ocorrencias}x</span>
-                                </div>
-                            `;
+                            rankingHtml.innerHTML += `<div class="flex justify-between items-center bg-[#1b3d1a] p-2.5 rounded-lg border border-[#3b7333] shadow-sm"><span class="text-xs font-bold text-emerald-50 tracking-wider">${pontinhos} ${atirador.nome}</span><span class="text-xs font-black ${medalhaCor}">${atirador.ocorrencias}x</span></div>`;
                         });
                     } else {
-                        // Se for uma data vazia, muda o texto para explicar que não houve erro ou não houve serviço
-                        const textoFeedback = data.totalServicos === 0 
-                            ? "Nenhum serviço arquivado para esta data." 
-                            : "A tropa mantém padrão impecável.<br>Nenhuma falta registrada neste serviço.";
-                        
+                        const textoFeedback = data.totalServicos === 0 ? "Nenhum serviço para esta data." : "Tropa padrão. Nenhuma falta.";
                         rankingHtml.innerHTML = `<p class="text-xs text-emerald-400 text-center font-bold mt-4 tracking-wider">${textoFeedback}</p>`;
                     }
 
@@ -345,17 +458,9 @@
                     const fal = data.statusTropa['FALTA'] || 0;
                     
                     if(pres > 0 || atr > 0 || fal > 0) {
-                        graficoTropa = new Chart(ctx, {
-                            type: 'doughnut',
-                            data: {
-                                labels: ['Presentes', 'Atrasos', 'Faltas'],
-                                datasets: [{ data: [pres, atr, fal], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderColor: '#1b3d1a', borderWidth: 2 }]
-                            },
-                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#d1fae5', font: { size: 10 } } } } }
-                        });
+                        graficoTropa = new Chart(ctx, { type: 'doughnut', data: { labels: ['Presentes', 'Atrasos', 'Faltas'], datasets: [{ data: [pres, atr, fal], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderColor: '#1b3d1a', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#d1fae5', font: { size: 10 } } } } } });
                     } else {
-                        ctx.font = "12px Inter"; ctx.fillStyle = "#d1fae5"; ctx.textAlign = "center";
-                        ctx.fillText("Nenhum dado arquivado.", ctx.canvas.width/2, ctx.canvas.height/2);
+                        ctx.font = "12px Inter"; ctx.fillStyle = "#d1fae5"; ctx.textAlign = "center"; ctx.fillText("Nenhum dado arquivado.", ctx.canvas.width/2, ctx.canvas.height/2);
                     }
                 }
             } catch(e) {}
@@ -364,7 +469,6 @@
         async function carregarHistoricos() {
             const resp = await fetch(`${API_URL}/historico`);
             historicoCompleto = await resp.json();
-            
             const c = document.getElementById('corpo-historico'); c.innerHTML = '';
             if(!historicoCompleto.length) { 
                 c.innerHTML = '<tr><td colspan="3" class="p-8 text-center text-slate-400 font-medium text-sm">Nenhum serviço arquivado no sistema.</td></tr>'; 
@@ -388,9 +492,7 @@
 
                 data.sentinelas.forEach(s => {
                     lS.innerHTML += `<li class="bg-white border p-3 flex justify-between items-center rounded-lg shadow-sm border-l-4 border-l-[#2d5a27]"><div class="flex flex-col"><span class="text-sm font-bold text-slate-700">At ${s.numero} ${s.nomeGuerra} <span class="ml-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-100 border border-slate-200">${s.status}</span></span><span class="text-[10px] text-slate-500 font-medium uppercase mt-0.5">${s.funcao}</span></div><button onclick="removerSentinela(${s.id})" class="text-rose-500 hover:text-rose-700 font-bold text-[10px] tracking-widest transition-colors">EXCLUIR</button></li>`;
-                    if(s.status !== 'FALTA') {
-                        lT.innerHTML += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><p class="text-[10px] text-slate-400 font-bold mb-2 tracking-widest uppercase">POSTO ATUAL</p><div class="flex justify-between items-center"><span class="font-bold text-sm text-slate-700">At ${s.numero} ${s.nomeGuerra}</span><select class="bg-slate-50 border border-slate-200 p-1.5 rounded text-xs font-bold text-[#2d5a27] outline-none" onchange="alterarAtividade(${s.id}, this.value)"><option value="Prontidão" ${s.atividadeAtual==='Prontidão'?'selected':''}>Prontidão</option><option value="Posto 1 (Portão)" ${s.atividadeAtual==='Posto 1 (Portão)'?'selected':''}>Posto 1 (Portão)</option><option value="Posto 2 (Fundos)" ${s.atividadeAtual==='Posto 2 (Fundos)'?'selected':''}>Posto 2 (Fundos)</option><option value="Ronda" ${s.atividadeAtual==='Ronda'?'selected':''}>Ronda</option><option value="Permanência" ${s.atividadeAtual==='Permanência'?'selected':''}>Permanência</option></select></div></div>`;
-                    }
+                    if(s.status !== 'FALTA') { lT.innerHTML += `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><p class="text-[10px] text-slate-400 font-bold mb-2 tracking-widest uppercase">POSTO ATUAL</p><div class="flex justify-between items-center"><span class="font-bold text-sm text-slate-700">At ${s.numero} ${s.nomeGuerra}</span><select class="bg-slate-50 border border-slate-200 p-1.5 rounded text-xs font-bold text-[#2d5a27] outline-none" onchange="alterarAtividade(${s.id}, this.value)"><option value="Prontidão" ${s.atividadeAtual==='Prontidão'?'selected':''}>Prontidão</option><option value="Posto 1 (Portão)" ${s.atividadeAtual==='Posto 1 (Portão)'?'selected':''}>Posto 1 (Portão)</option><option value="Posto 2 (Fundos)" ${s.atividadeAtual==='Posto 2 (Fundos)'?'selected':''}>Posto 2 (Fundos)</option><option value="Ronda" ${s.atividadeAtual==='Ronda'?'selected':''}>Ronda</option><option value="Permanência" ${s.atividadeAtual==='Permanência'?'selected':''}>Permanência</option></select></div></div>`; }
                 });
                 data.alteracoes.forEach(a => { lA.innerHTML += `<li class="bg-amber-50 border border-amber-100 p-3 flex justify-between items-start rounded-lg shadow-sm border-l-4 border-l-amber-500 text-xs font-medium"><div class="flex flex-col"><span class="font-bold text-amber-700 mb-0.5">[${a.horario}]</span><span class="text-slate-700">${a.descricao}</span></div><button onclick="removerAlteracao(${a.id})" class="text-rose-500 hover:text-rose-700 font-bold ml-4 text-[10px]">X</button></li>`; });
                 data.visitantes.forEach(v => {
@@ -398,30 +500,15 @@
                     lV.innerHTML += `<li class="bg-white border p-3 flex justify-between items-center rounded-lg shadow-sm border-l-4 border-l-blue-600"><div class="flex flex-col"><span class="text-sm font-bold text-blue-800">${v.nome} <span class="text-[10px] font-normal text-slate-500 ml-1">(${v.rg})</span></span><span class="text-[11px] text-slate-500 font-medium mt-0.5">${v.motivo} ${v.placaVeiculo?'| Placa: '+v.placaVeiculo:''}</span><span class="text-[10px] font-bold text-slate-700 mt-1">ENTRADA: ${v.horaEntrada}</span></div><div class="flex flex-col items-end gap-2">${statusSaida}<button onclick="removerVisitante(${v.id})" class="text-slate-400 hover:text-rose-500 font-bold text-[10px] tracking-wider transition-colors">EXCLUIR</button></div></li>`;
                 });
                 data.rondas.forEach(r => {
-                    const btnAcao = r.concluida ? `<span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 border border-emerald-100 rounded">FEITA ÀS ${r.horarioRealizado}</span>` : `<button onclick="realizarRonda(${r.id})" class="bg-orange-50 hover:bg-orange-100 text-orange-600 px-3 py-1 rounded border border-orange-200 text-[10px] font-bold tracking-wider transition-colors">EXECUTAR AGORA</button>`;
-                    lR.innerHTML += `<li class="bg-white border p-3 flex justify-between items-center rounded-lg shadow-sm border-l-4 border-l-orange-500"><div class="flex flex-col"><span class="text-sm font-bold text-orange-800">Ronda das ${r.horarioPrevisto}</span><span class="text-[11px] text-slate-500 font-medium mt-0.5">Resp: ${r.responsavel}</span></div><div class="flex flex-col items-end gap-2">${btnAcao}<button onclick="removerRonda(${r.id})" class="text-slate-400 hover:text-rose-500 font-bold text-[10px] tracking-wider transition-colors">EXCLUIR</button></div></li>`;
+                    let btnAcao = r.concluida ? `<span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 border border-emerald-100 rounded shadow-sm">FEITA ÀS ${r.horarioRealizado}</span>` : `<div class="flex items-center gap-2"><input type="text" id="resp-ronda-${r.id}" placeholder="Responsável" class="bg-slate-50 border border-slate-200 text-slate-700 text-[10px] p-1.5 rounded outline-none font-medium shadow-sm w-24"><button onclick="realizarRonda(${r.id})" class="bg-orange-50 hover:bg-orange-100 text-orange-600 px-3 py-1.5 rounded border border-orange-200 text-[10px] font-bold tracking-wider transition-colors shadow-sm">EXECUTAR</button></div>`;
+                    lR.innerHTML += `<li class="bg-white border p-3 flex justify-between items-center rounded-lg shadow-sm border-l-4 border-l-orange-500"><div class="flex flex-col"><span class="text-sm font-bold text-orange-800">Ronda das ${r.horarioPrevisto}</span><span class="text-[11px] text-slate-500 font-medium mt-0.5">${r.concluida ? 'Resp: ' + r.responsavel : 'Pendente'}</span></div><div class="flex flex-col items-end gap-2">${btnAcao}${r.concluida ? '' : `<button onclick="removerRonda(${r.id})" class="text-slate-400 hover:text-rose-500 font-bold text-[9px] tracking-wider transition-colors">EXCLUIR</button>`}</div></li>`;
                 });
             } catch(e){}
         }
 
         async function registrarSaidaVisitante(id) { const h = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}); await fetch(`${API_URL}/visitante/${id}/saida`, { method: 'PUT', headers: {'Content-Type': 'text/plain'}, body: h }); atualizarListasVivas(); }
-        async function realizarRonda(id) { const respNome = prompt("Nome de quem realizou a ronda (Ex: At Dias):"); if(!respNome) return; const h = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}); await fetch(`${API_URL}/ronda/${id}/realizar`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({responsavel: respNome, horarioRealizado: h}) }); atualizarListasVivas(); }
-        async function excluirHistorico(id) { 
-            if(confirm("ORDEM CRÍTICA: Apagar permanentemente?")) { 
-                const r = await fetch(`${API_URL}/historico/${id}`, { method: 'DELETE' }); 
-                if(r.ok) { 
-                    await carregarHistoricos(); 
-                    // Se o filtro atual não estiver vazio, re-aplica ele, senão limpa
-                    const dt = document.getElementById('filtro-data').value;
-                    if(dt) {
-                        const [y, m, d] = dt.split('-');
-                        await carregarEstatisticas(`${d}/${m}/${y}`);
-                    } else {
-                        await carregarEstatisticas(); 
-                    }
-                } else alert("SEM PERMISSÃO"); 
-            } 
-        }
+        async function realizarRonda(id) { const inputResp = document.getElementById(`resp-ronda-${id}`); const respNome = inputResp ? inputResp.value.trim() : ""; if(!respNome) { alert("Digite o nome de quem executou a ronda!"); return; } const h = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}); await fetch(`${API_URL}/ronda/${id}/realizar`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({responsavel: respNome, horarioRealizado: h}) }); atualizarListasVivas(); }
+        async function excluirHistorico(id) { if(confirm("ORDEM CRÍTICA: Apagar permanentemente?")) { const r = await fetch(`${API_URL}/historico/${id}`, { method: 'DELETE' }); if(r.ok) { await carregarHistoricos(); const dt = document.getElementById('filtro-data').value; if(dt) { const [y, m, d] = dt.split('-'); await carregarEstatisticas(`${d}/${m}/${y}`); } else { await carregarEstatisticas(); } } else alert("SEM PERMISSÃO"); } }
         async function alterarAtividade(id, a) { await fetch(`${API_URL}/sentinela/${id}/atividade`, { method: 'PUT', headers: {'Content-Type': 'text/plain'}, body: a }); }
         async function removerSentinela(id) { await fetch(`${API_URL}/sentinela/${id}`, { method: 'DELETE' }); atualizarListasVivas(); }
         async function removerAlteracao(id) { await fetch(`${API_URL}/alteracao/${id}`, { method: 'DELETE' }); atualizarListasVivas(); }
@@ -437,16 +524,16 @@
             document.getElementById('data-relatorio').innerText = d; document.getElementById('relatorio-cmt').innerText = cmt; document.getElementById('assinatura-cmt').innerText = cmt.toUpperCase();
             document.getElementById('pdf-faxina').innerText = f; document.getElementById('pdf-armamento').innerText = a; document.getElementById('pdf-chaves').innerText = ch; document.getElementById('pdf-obs').innerText = o || "S/A";
             const cE = document.getElementById('corpo-efetivo'); cE.innerHTML = '';
-            sentinelas.sort((a,b)=>a.funcao.includes('Permanência')?-1:1).forEach(s => { cE.innerHTML += `<tr class="border-b"><td class="p-1 border-r text-center">${s.numero}</td><td class="p-1 border-r">${s.nomeGuerra}</td><td class="p-1 border-r">${s.funcao}</td><td class="p-1 border-r text-center font-bold">${s.status}</td><td class="p-1">${s.atividadeAtual}</td></tr>`; });
+            sentinelas.sort((a,b)=>a.funcao.includes('Permanência')?-1:1).forEach(s => { cE.innerHTML += `<tr><td style="text-align:center;">${s.numero}</td><td>${s.nomeGuerra}</td><td>${s.funcao}</td><td style="text-align:center; font-weight:bold;">${s.status}</td><td>${s.atividadeAtual}</td></tr>`; });
             const cV = document.getElementById('corpo-visitantes-pdf'); cV.innerHTML = '';
-            if(!visitantes.length) cV.innerHTML = '<tr><td colspan="5" class="p-2 text-center italic">Nenhum visitante registrado.</td></tr>';
-            else visitantes.forEach(v => { cV.innerHTML += `<tr class="border-b"><td class="p-1 border-r">${v.nome}</td><td class="p-1 border-r text-center">${v.rg}</td><td class="p-1 border-r text-center">${v.placaVeiculo||'--'}</td><td class="p-1 border-r">${v.motivo}</td><td class="p-1 text-center font-bold">${v.horaEntrada}/${v.horaSaida}</td></tr>`; });
+            if(!visitantes.length) cV.innerHTML = '<tr><td colspan="5" style="text-align:center; font-style:italic;">Nenhum visitante registrado.</td></tr>';
+            else visitantes.forEach(v => { cV.innerHTML += `<tr><td>${v.nome}</td><td style="text-align:center;">${v.rg}</td><td style="text-align:center;">${v.placaVeiculo||'--'}</td><td>${v.motivo}</td><td style="text-align:center; font-weight:bold;">${v.horaEntrada}/${v.horaSaida}</td></tr>`; });
             const cR = document.getElementById('corpo-rondas-pdf'); cR.innerHTML = '';
-            if(!rondas.length) cR.innerHTML = '<tr><td colspan="4" class="p-2 text-center italic">Nenhuma ronda registrada.</td></tr>';
-            else rondas.forEach(r => { cR.innerHTML += `<tr class="border-b"><td class="p-1 border-r text-center font-bold">${r.horarioPrevisto}</td><td class="p-1 border-r text-center font-bold">${r.horarioRealizado}</td><td class="p-1 border-r">${r.responsavel}</td><td class="p-1 text-center ${r.concluida?'text-green-600 font-bold':'text-red-600 font-bold'}">${r.concluida?'REALIZADA':'PENDENTE'}</td></tr>`; });
+            if(!rondas.length) cR.innerHTML = '<tr><td colspan="4" style="text-align:center; font-style:italic;">Nenhuma ronda registrada.</td></tr>';
+            else rondas.forEach(r => { cR.innerHTML += `<tr><td style="text-align:center; font-weight:bold;">${r.horarioPrevisto}</td><td style="text-align:center; font-weight:bold;">${r.horarioRealizado}</td><td>${r.responsavel}</td><td style="text-align:center; font-weight:bold;">${r.concluida?'REALIZADA':'PENDENTE'}</td></tr>`; });
             const cA = document.getElementById('corpo-alteracoes'); cA.innerHTML = '';
-            if(!alteracoes.length) cA.innerHTML = '<tr><td colspan="2" class="p-2 text-center italic">S/A</td></tr>';
-            else alteracoes.forEach(alt => { cA.innerHTML += `<tr class="border-b"><td class="p-1 border-r font-bold">${alt.horario}</td><td class="p-1">${alt.descricao}</td></tr>`; });
+            if(!alteracoes.length) cA.innerHTML = '<tr><td colspan="2" style="text-align:center; font-style:italic;">Sem Alteração (S/A)</td></tr>';
+            else alteracoes.forEach(alt => { cA.innerHTML += `<tr><td style="font-weight:bold; text-align:center;">${alt.horario}</td><td>${alt.descricao}</td></tr>`; });
             document.getElementById('painel-relatorio').classList.remove('hidden');
         }
 
